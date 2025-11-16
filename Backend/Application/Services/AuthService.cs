@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SistemaDeGestionDeClub.Application.DTOs;
+using SistemaDeGestionDeClub.Domain.Entities;
 using SistemaDeGestionDeClub.Infrastructure.Data;
 
 namespace SistemaDeGestionDeClub.Application.Services;
