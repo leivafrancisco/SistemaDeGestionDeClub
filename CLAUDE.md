@@ -86,7 +86,7 @@ The backend follows Clean Architecture with four distinct layers:
 - `Data/ClubDbContext.cs`: EF Core database context with complete entity configurations
 - Maps domain entities to database tables using Fluent API
 - Implements soft delete pattern via `FechaEliminacion`
-- Auto-updates `FechaActualizacion` on entity modification (see `ClubDbContext.SaveChangesAsync:237`)
+- Auto-updates `FechaActualizacion` on entity modification (see ClubDbContext.SaveChangesAsync:237)
 
 **API Layer** (`Backend/API/`)
 - `Controllers/`: REST API endpoints (`AuthController`, `SociosController`)
