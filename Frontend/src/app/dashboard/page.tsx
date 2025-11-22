@@ -1,168 +1,183 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { sociosService, type Socio } from '@/lib/api/socios';
-import { authService } from '@/lib/api/auth';
-import { Users, Search, Plus, LogOut, UserCircle, Mail, Calendar, CheckCircle, XCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import {
+  Users,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Calendar,
+  CreditCard,
+  Activity
+} from 'lucide-react';
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [socios, setSocios] = useState<Socio[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [usuario, setUsuario] = useState<any>(null);
 
   useEffect(() => {
-    const user = authService.getUsuario();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    setUsuario(user);
-    cargarSocios();
+    cargarDatos();
   }, []);
 
-  const cargarSocios = async () => {
+  const cargarDatos = async () => {
     try {
       setIsLoading(true);
-      const data = await sociosService.obtenerTodos({ search: searchTerm, page: 1, pageSize: 50 });
+      const data = await sociosService.obtenerTodos({ page: 1, pageSize: 100 });
       setSocios(data);
     } catch (error) {
-      console.error('Error al cargar socios:', error);
+      console.error('Error al cargar datos:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearch = () => {
-    cargarSocios();
-  };
+  const totalSocios = socios.length;
+  const sociosActivos = socios.filter(s => s.estaActivo).length;
+  const sociosInactivos = socios.filter(s => !s.estaActivo).length;
 
-  const handleLogout = () => {
-    authService.logout();
-    router.push('/login');
-  };
+  const stats = [
+    {
+      label: 'Total Socios',
+      value: totalSocios,
+      icon: <Users className="w-6 h-6" />,
+      color: 'blue',
+      bgColor: 'bg-blue-100',
+      textColor: 'text-blue-600',
+    },
+    {
+      label: 'Socios Activos',
+      value: sociosActivos,
+      icon: <CheckCircle className="w-6 h-6" />,
+      color: 'green',
+      bgColor: 'bg-green-100',
+      textColor: 'text-green-600',
+    },
+    {
+      label: 'Socios Inactivos',
+      value: sociosInactivos,
+      icon: <XCircle className="w-6 h-6" />,
+      color: 'red',
+      bgColor: 'bg-red-100',
+      textColor: 'text-red-600',
+    },
+    {
+      label: 'Crecimiento',
+      value: '+12%',
+      icon: <TrendingUp className="w-6 h-6" />,
+      color: 'purple',
+      bgColor: 'bg-purple-100',
+      textColor: 'text-purple-600',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Sistema de Gestión de Club</h1>
-              <p className="text-sm text-gray-600">Bienvenido, {usuario?.nombreCompleto}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar Sesión
-            </button>
-          </div>
+    <div>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600">Bienvenido al panel de administracion del club</p>
+      </div>
+
+      {/* Stats Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Socios</p>
-                <p className="text-3xl font-bold text-gray-900">{socios.length}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Users className="w-8 h-8 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Socios Activos</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {socios.filter(s => s.estaActivo).length}
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Socios Inactivos</p>
-                <p className="text-3xl font-bold text-red-600">
-                  {socios.filter(s => !s.estaActivo).length}
-                </p>
-              </div>
-              <div className="bg-red-100 p-3 rounded-full">
-                <XCircle className="w-8 h-8 text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Socios Section */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Listado de Socios</h2>
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                <Plus className="w-4 h-4" />
-                Nuevo Socio
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, DNI, email o número de socio..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition"
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow"
               >
-                Buscar
-              </button>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+                    <p className={`text-3xl font-bold mt-1 ${stat.textColor}`}>
+                      {stat.value}
+                    </p>
+                  </div>
+                  <div className={`${stat.bgColor} p-3 rounded-xl`}>
+                    <div className={stat.textColor}>{stat.icon}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rapidas</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <Link href="/dashboard/socios/nuevo" className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">Nuevo Socio</span>
+                </Link>
+                <button className="flex items-center gap-3 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                  <CreditCard className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-700">Registrar Pago</span>
+                </button>
+                <button className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <Calendar className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm font-medium text-purple-700">Marcar Asistencia</span>
+                </button>
+                <Link href="/dashboard/actividades/nueva" className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                  <Activity className="w-5 h-5 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-700">Nueva Actividad</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h2>
+              <div className="space-y-4">
+                {socios.slice(0, 5).map((socio) => (
+                  <div key={socio.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {socio.nombre} {socio.apellido}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Socio #{socio.numeroSocio}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      socio.estaActivo
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {socio.estaActivo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                ))}
+                {socios.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No hay socios registrados
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              </div>
-            ) : socios.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                No se encontraron socios
-              </div>
-            ) : (
+          {/* Members Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900">Ultimos Socios Registrados</h2>
+            </div>
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      N° Socio
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nombre Completo
+                      Socio
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Email
@@ -171,41 +186,33 @@ export default function DashboardPage() {
                       DNI
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fecha Alta
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {socios.map((socio) => (
-                    <tr key={socio.id} className="hover:bg-gray-50 cursor-pointer">
+                <tbody className="divide-y divide-gray-100">
+                  {socios.slice(0, 10).map((socio) => (
+                    <tr key={socio.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <UserCircle className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="font-medium text-gray-900">{socio.numeroSocio}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {socio.nombre} {socio.apellido}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Mail className="w-4 h-4 mr-2" />
-                          {socio.email}
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600">
+                              {socio.nombre.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {socio.nombre} {socio.apellido}
+                            </p>
+                            <p className="text-xs text-gray-500">#{socio.numeroSocio}</p>
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {socio.dni || '-'}
+                        {socio.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          {format(new Date(socio.fechaAlta), 'dd/MM/yyyy', { locale: es })}
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {socio.dni || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {socio.estaActivo ? (
@@ -224,10 +231,15 @@ export default function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            )}
+              {socios.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  No se encontraron socios
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+        </>
+      )}
     </div>
   );
 }

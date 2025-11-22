@@ -119,16 +119,38 @@ public class SocioService : ISocioService
     public async Task<SocioDto> CrearAsync(CrearSocioDto dto)
     {
         // Validar que el email no exista
-        if (await _context.Personas.AnyAsync(p => p.Email == dto.Email))
+        if (await _context.Personas.AnyAsync(p => p.Email == dto.Email && p.FechaEliminacion == null))
         {
-            throw new InvalidOperationException("Ya existe una persona con este email");
+            throw new InvalidOperationException("Ya existe un socio con este email");
         }
-        
-        // Validar que el número de socio no exista
-        if (await _context.Socios.AnyAsync(s => s.NumeroSocio == dto.NumeroSocio))
+
+        // Validar que el DNI no exista (si se proporciona)
+        if (!string.IsNullOrEmpty(dto.Dni))
         {
-            throw new InvalidOperationException("Ya existe un socio con este número");
+            if (await _context.Personas.AnyAsync(p => p.Dni == dto.Dni && p.FechaEliminacion == null))
+            {
+                throw new InvalidOperationException("Ya existe un socio con este DNI");
+            }
         }
+
+        // Generar número de socio automáticamente
+        var ultimoNumero = await _context.Socios
+            .Where(s => s.NumeroSocio.StartsWith("SOC-"))
+            .Select(s => s.NumeroSocio)
+            .OrderByDescending(n => n)
+            .FirstOrDefaultAsync();
+
+        int siguienteNumero = 1;
+        if (!string.IsNullOrEmpty(ultimoNumero) && ultimoNumero.Length > 4)
+        {
+            // Formato: SOC-XXXX
+            if (int.TryParse(ultimoNumero.Substring(4), out int numero))
+            {
+                siguienteNumero = numero + 1;
+            }
+        }
+
+        var numeroSocio = $"SOC-{siguienteNumero:D4}";
         
         // Crear persona
         var persona = new Persona
@@ -149,7 +171,7 @@ public class SocioService : ISocioService
         var socio = new Socio
         {
             IdPersona = persona.Id,
-            NumeroSocio = dto.NumeroSocio,
+            NumeroSocio = numeroSocio,
             EstaActivo = true,
             FechaAlta = DateTime.Now,
             FechaCreacion = DateTime.Now,

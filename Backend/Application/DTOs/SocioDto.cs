@@ -21,7 +21,6 @@ public class CrearSocioDto
     public string Email { get; set; } = string.Empty;
     public string? Dni { get; set; }
     public DateTime? FechaNacimiento { get; set; }
-    public string NumeroSocio { get; set; } = string.Empty;
 }
 
 public class ActualizarSocioDto

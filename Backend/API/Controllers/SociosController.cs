@@ -94,7 +94,7 @@ public class SociosController : ControllerBase
         try
         {
             var socio = await _socioService.CrearAsync(dto);
-            return CreatedAtAction(nameof(ObtenerPorId), new { id = socio.Id }, socio);
+            return Ok(socio);
         }
         catch (InvalidOperationException ex)
         {

@@ -19,7 +19,6 @@ export interface CrearSocioDto {
   email: string;
   dni?: string;
   fechaNacimiento?: string;
-  numeroSocio: string;
 }
 
 export interface ActualizarSocioDto {
