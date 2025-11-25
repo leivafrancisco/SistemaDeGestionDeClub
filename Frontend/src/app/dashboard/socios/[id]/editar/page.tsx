@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { sociosService, CrearSocioDto } from '@/lib/api/socios';
+import { sociosService, ActualizarSocioDto, Socio } from '@/lib/api/socios';
 
 const socioSchema = z.object({
   nombre: z
@@ -35,19 +35,49 @@ const socioSchema = z.object({
 
 type SocioFormData = z.infer<typeof socioSchema>;
 
-export default function NuevoSocioPage() {
+export default function EditarSocioPage() {
   const router = useRouter();
+  const params = useParams();
+  const socioId = parseInt(params.id as string);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [socio, setSocio] = useState<Socio | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<SocioFormData>({
     resolver: zodResolver(socioSchema),
   });
+
+  useEffect(() => {
+    cargarSocio();
+  }, [socioId]);
+
+  const cargarSocio = async () => {
+    try {
+      setIsLoading(true);
+      const data = await sociosService.obtenerPorId(socioId);
+      setSocio(data);
+
+      // Pre-llenar el formulario
+      setValue('nombre', data.nombre);
+      setValue('apellido', data.apellido);
+      setValue('email', data.email);
+      setValue('dni', data.dni || '');
+      setValue('fechaNacimiento', data.fechaNacimiento ? data.fechaNacimiento.split('T')[0] : '');
+    } catch (err: any) {
+      setError('Error al cargar los datos del socio');
+      console.error('Error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onSubmit = async (data: SocioFormData) => {
     setIsSubmitting(true);
@@ -55,7 +85,7 @@ export default function NuevoSocioPage() {
     setSuccess(null);
 
     try {
-      const socioData: CrearSocioDto = {
+      const socioData: ActualizarSocioDto = {
         nombre: data.nombre.trim(),
         apellido: data.apellido.trim(),
         email: data.email.trim().toLowerCase(),
@@ -63,9 +93,8 @@ export default function NuevoSocioPage() {
         fechaNacimiento: data.fechaNacimiento || undefined,
       };
 
-      console.log('Datos a enviar:', socioData);
-      const nuevoSocio = await sociosService.crear(socioData);
-      setSuccess(`Socio ${nuevoSocio.nombre} ${nuevoSocio.apellido} creado exitosamente con número ${nuevoSocio.numeroSocio}`);
+      await sociosService.actualizar(socioId, socioData);
+      setSuccess(`Socio actualizado exitosamente`);
 
       // Redirigir después de 2 segundos
       setTimeout(() => {
@@ -75,12 +104,31 @@ export default function NuevoSocioPage() {
       console.error('Error completo:', err);
       console.error('Error response:', err.response);
       console.error('Error response data:', err.response?.data);
-      const errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Error al crear el socio';
+      const errorMessage =
+        err.response?.data?.message || err.response?.data || err.message || 'Error al actualizar el socio';
       setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!socio) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          No se encontró el socio
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -96,8 +144,10 @@ export default function NuevoSocioPage() {
 
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-900">Nuevo Socio</h1>
-          <p className="text-sm text-gray-500 mt-1">El número de socio se asignará automáticamente</p>
+          <h1 className="text-xl font-semibold text-gray-900">Editar Socio</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Socio N° {socio.numeroSocio}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
@@ -228,7 +278,7 @@ export default function NuevoSocioPage() {
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Guardar Socio
+                  Guardar Cambios
                 </>
               )}
             </button>

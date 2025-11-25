@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { sociosService, CrearSocioDto } from '@/lib/api/socios';
+import { usuariosService, ActualizarUsuarioDto, Usuario } from '@/lib/api/usuarios';
 
-const socioSchema = z.object({
+const usuarioSchema = z.object({
   nombre: z
     .string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -33,29 +33,58 @@ const socioSchema = z.object({
   fechaNacimiento: z.string().optional(),
 });
 
-type SocioFormData = z.infer<typeof socioSchema>;
+type UsuarioFormData = z.infer<typeof usuarioSchema>;
 
-export default function NuevoSocioPage() {
+export default function EditarUsuarioPage() {
   const router = useRouter();
+  const params = useParams();
+  const usuarioId = parseInt(params.id as string);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SocioFormData>({
-    resolver: zodResolver(socioSchema),
+    setValue,
+  } = useForm<UsuarioFormData>({
+    resolver: zodResolver(usuarioSchema),
   });
 
-  const onSubmit = async (data: SocioFormData) => {
+  useEffect(() => {
+    cargarUsuario();
+  }, [usuarioId]);
+
+  const cargarUsuario = async () => {
+    try {
+      setIsLoading(true);
+      const data = await usuariosService.obtenerPorId(usuarioId);
+      setUsuario(data);
+
+      // Pre-llenar el formulario (asumiendo que la API devuelve estos campos)
+      const nombreCompleto = data.nombreCompleto.split(' ');
+      setValue('nombre', nombreCompleto[0]);
+      setValue('apellido', nombreCompleto.slice(1).join(' '));
+      setValue('email', data.email);
+    } catch (err: any) {
+      setError('Error al cargar los datos del usuario');
+      console.error('Error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = async (data: UsuarioFormData) => {
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const socioData: CrearSocioDto = {
+      const usuarioData: ActualizarUsuarioDto = {
         nombre: data.nombre.trim(),
         apellido: data.apellido.trim(),
         email: data.email.trim().toLowerCase(),
@@ -63,30 +92,45 @@ export default function NuevoSocioPage() {
         fechaNacimiento: data.fechaNacimiento || undefined,
       };
 
-      console.log('Datos a enviar:', socioData);
-      const nuevoSocio = await sociosService.crear(socioData);
-      setSuccess(`Socio ${nuevoSocio.nombre} ${nuevoSocio.apellido} creado exitosamente con número ${nuevoSocio.numeroSocio}`);
+      await usuariosService.actualizar(usuarioId, usuarioData);
+      setSuccess('Usuario actualizado exitosamente');
 
-      // Redirigir después de 2 segundos
       setTimeout(() => {
-        router.push('/dashboard/socios');
+        router.push('/dashboard/usuarios');
       }, 2000);
     } catch (err: any) {
       console.error('Error completo:', err);
-      console.error('Error response:', err.response);
-      console.error('Error response data:', err.response?.data);
-      const errorMessage = err.response?.data?.message || err.response?.data || err.message || 'Error al crear el socio';
+      const errorMessage =
+        err.response?.data?.message || err.response?.data || err.message || 'Error al actualizar el usuario';
       setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!usuario) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          No se encontró el usuario
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <Link
-          href="/dashboard/socios"
+          href="/dashboard/usuarios"
           className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
@@ -96,8 +140,10 @@ export default function NuevoSocioPage() {
 
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-900">Nuevo Socio</h1>
-          <p className="text-sm text-gray-500 mt-1">El número de socio se asignará automáticamente</p>
+          <h1 className="text-xl font-semibold text-gray-900">Editar Usuario</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Usuario: {usuario.nombreUsuario} - Rol: {usuario.rol}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
@@ -123,7 +169,7 @@ export default function NuevoSocioPage() {
                 id="nombre"
                 {...register('nombre')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
-                placeholder="Ej: Juan"
+                placeholder="Juan"
                 onKeyPress={(e) => {
                   if (/[0-9]/.test(e.key)) {
                     e.preventDefault();
@@ -144,7 +190,7 @@ export default function NuevoSocioPage() {
                 id="apellido"
                 {...register('apellido')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
-                placeholder="Ej: Pérez"
+                placeholder="Pérez"
                 onKeyPress={(e) => {
                   if (/[0-9]/.test(e.key)) {
                     e.preventDefault();
@@ -165,7 +211,7 @@ export default function NuevoSocioPage() {
                 id="email"
                 {...register('email')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
-                placeholder="Ej: juan@email.com"
+                placeholder="usuario@email.com"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -181,7 +227,7 @@ export default function NuevoSocioPage() {
                 id="dni"
                 {...register('dni')}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
-                placeholder="Ej: 12345678"
+                placeholder="12345678"
                 maxLength={8}
                 onKeyPress={(e) => {
                   if (!/[0-9]/.test(e.key)) {
@@ -210,7 +256,7 @@ export default function NuevoSocioPage() {
 
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <Link
-              href="/dashboard/socios"
+              href="/dashboard/usuarios"
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancelar
@@ -228,7 +274,7 @@ export default function NuevoSocioPage() {
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Guardar Socio
+                  Guardar Cambios
                 </>
               )}
             </button>
