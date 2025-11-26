@@ -116,11 +116,10 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
             entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(500);
             entity.Property(e => e.Precio).HasColumnName("precio").HasColumnType("decimal(10, 2)").IsRequired();
-            entity.Property(e => e.EsCuotaBase).HasColumnName("es_cuota_base").HasDefaultValue(false);
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
-            
+
             entity.HasIndex(e => e.Nombre).IsUnique();
         });
         
@@ -159,16 +158,16 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.IdMembresia).HasColumnName("id_membresia");
             entity.Property(e => e.IdActividad).HasColumnName("id_actividad");
             entity.Property(e => e.PrecioAlMomento).HasColumnName("precio_al_momento").HasColumnType("decimal(10, 2)").IsRequired();
-            
+
             entity.HasOne(e => e.Membresia)
                 .WithMany(m => m.MembresiaActividades)
                 .HasForeignKey(e => e.IdMembresia)
-                .OnDelete(DeleteBehavior.Restrict);
-            
+                .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasOne(e => e.Actividad)
                 .WithMany(a => a.MembresiaActividades)
                 .HasForeignKey(e => e.IdActividad)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         });
         
         // Configuración de MetodoPago

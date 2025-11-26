@@ -3,30 +3,35 @@ import apiClient from './client';
 export interface Usuario {
   id: number;
   nombreUsuario: string;
+  nombre: string;
+  apellido: string;
   nombreCompleto: string;
   email: string;
+  dni?: string;
+  fechaNacimiento?: string;
   rol: string;
   estaActivo: boolean;
   fechaCreacion: string;
 }
 
 export interface CrearUsuarioDto {
-  nombreUsuario: string;
-  contrasena: string;
   nombre: string;
   apellido: string;
   email: string;
   dni?: string;
   fechaNacimiento?: string;
-  rol: string;
+  nombreUsuario: string;
+  password: string;
+  rol: string; // "admin" o "recepcionista"
 }
 
 export interface ActualizarUsuarioDto {
-  nombre: string;
-  apellido: string;
-  email: string;
+  nombre?: string;
+  apellido?: string;
+  email?: string;
   dni?: string;
   fechaNacimiento?: string;
+  estaActivo?: boolean;
 }
 
 export interface FiltrosUsuarios {

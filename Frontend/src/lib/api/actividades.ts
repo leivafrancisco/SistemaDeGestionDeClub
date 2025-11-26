@@ -5,7 +5,6 @@ export interface Actividad {
   nombre: string;
   descripcion?: string;
   precio: number;
-  esCuotaBase: boolean;
   fechaCreacion: string;
 }
 
@@ -13,7 +12,6 @@ export interface CrearActividadDto {
   nombre: string;
   descripcion?: string;
   precio: number;
-  esCuotaBase: boolean;
 }
 
 export interface ActualizarActividadDto {

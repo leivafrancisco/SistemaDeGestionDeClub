@@ -14,6 +14,8 @@ public interface IPagoService
     Task<ComprobantePagoDto> GenerarComprobanteAsync(int idPago);
     Task<bool> AnularPagoAsync(int id);
     Task<decimal> ObtenerTotalRecaudadoAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null);
+    Task<List<MetodoPagoDto>> ObtenerMetodosPagoAsync();
+    Task<EstadisticasPagosDto> ObtenerEstadisticasAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null);
 }
 
 public class PagoService : IPagoService
@@ -254,6 +256,106 @@ public class PagoService : IPagoService
         }
 
         return await query.SumAsync(p => p.Monto);
+    }
+
+    public async Task<List<MetodoPagoDto>> ObtenerMetodosPagoAsync()
+    {
+        var metodos = await _context.MetodosPago.ToListAsync();
+        return metodos.Select(m => new MetodoPagoDto
+        {
+            Id = m.Id,
+            Nombre = m.Nombre,
+            EstaActivo = true // Por defecto todos están activos, ya que la entidad no tiene este campo
+        }).ToList();
+    }
+
+    public async Task<EstadisticasPagosDto> ObtenerEstadisticasAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+    {
+        var hoy = DateTime.Today;
+        var primerDiaMes = new DateTime(hoy.Year, hoy.Month, 1);
+        var ultimoDiaMes = primerDiaMes.AddMonths(1).AddDays(-1);
+
+        // Query base de pagos en el período especificado
+        var queryPeriodo = _context.Pagos
+            .Include(p => p.MetodoPago)
+            .Where(p => p.FechaEliminacion == null)
+            .AsQueryable();
+
+        if (fechaDesde.HasValue)
+        {
+            queryPeriodo = queryPeriodo.Where(p => p.FechaPago >= fechaDesde.Value);
+        }
+
+        if (fechaHasta.HasValue)
+        {
+            queryPeriodo = queryPeriodo.Where(p => p.FechaPago <= fechaHasta.Value);
+        }
+
+        var pagosPeriodo = await queryPeriodo.ToListAsync();
+
+        // Total recaudado en el período
+        var totalRecaudado = pagosPeriodo.Sum(p => p.Monto);
+
+        // Total pagos hoy
+        var totalPagosHoy = await _context.Pagos
+            .Where(p => p.FechaEliminacion == null && p.FechaPago.Date == hoy)
+            .SumAsync(p => p.Monto);
+
+        // Total pagos del mes actual
+        var totalPagosMes = await _context.Pagos
+            .Where(p => p.FechaEliminacion == null &&
+                        p.FechaPago >= primerDiaMes &&
+                        p.FechaPago <= ultimoDiaMes)
+            .SumAsync(p => p.Monto);
+
+        // Total pendiente (saldo de todas las membresías impagas)
+        var membresias = await _context.Membresias
+            .Include(m => m.MembresiaActividades)
+            .Include(m => m.Pagos)
+            .Where(m => m.FechaEliminacion == null)
+            .ToListAsync();
+
+        var totalPendiente = membresias.Sum(m =>
+        {
+            var totalCargado = m.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
+            var totalPagado = m.Pagos.Where(p => p.FechaEliminacion == null).Sum(p => p.Monto);
+            var saldo = totalCargado - totalPagado;
+            return saldo > 0 ? saldo : 0;
+        });
+
+        // Pagos por método de pago
+        var pagosPorMetodo = pagosPeriodo
+            .GroupBy(p => p.MetodoPago.Nombre)
+            .Select(g => new PagoPorMetodoDto
+            {
+                Metodo = g.Key,
+                Total = g.Sum(p => p.Monto),
+                Cantidad = g.Count()
+            })
+            .OrderByDescending(x => x.Total)
+            .ToList();
+
+        // Pagos por día
+        var pagosPorDia = pagosPeriodo
+            .GroupBy(p => p.FechaPago.Date)
+            .Select(g => new PagoPorDiaDto
+            {
+                Fecha = g.Key,
+                Total = g.Sum(p => p.Monto),
+                Cantidad = g.Count()
+            })
+            .OrderBy(x => x.Fecha)
+            .ToList();
+
+        return new EstadisticasPagosDto
+        {
+            TotalRecaudado = totalRecaudado,
+            TotalPagosHoy = totalPagosHoy,
+            TotalPagosMes = totalPagosMes,
+            TotalPendiente = totalPendiente,
+            PagosPorMetodo = pagosPorMetodo,
+            PagosPorDia = pagosPorDia
+        };
     }
 
     private PagoDto MapearADto(Pago pago)

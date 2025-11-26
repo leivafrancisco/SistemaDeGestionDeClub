@@ -68,3 +68,34 @@ public class FiltrosPagosDto
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
+
+public class MetodoPagoDto
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public bool EstaActivo { get; set; }
+}
+
+public class EstadisticasPagosDto
+{
+    public decimal TotalRecaudado { get; set; }
+    public decimal TotalPagosHoy { get; set; }
+    public decimal TotalPagosMes { get; set; }
+    public decimal TotalPendiente { get; set; }
+    public List<PagoPorMetodoDto> PagosPorMetodo { get; set; } = new();
+    public List<PagoPorDiaDto> PagosPorDia { get; set; } = new();
+}
+
+public class PagoPorMetodoDto
+{
+    public string Metodo { get; set; } = string.Empty;
+    public decimal Total { get; set; }
+    public int Cantidad { get; set; }
+}
+
+public class PagoPorDiaDto
+{
+    public DateTime Fecha { get; set; }
+    public decimal Total { get; set; }
+    public int Cantidad { get; set; }
+}

@@ -156,6 +156,43 @@ public class PagosController : ControllerBase
     }
 
     /// <summary>
+    /// Obtener métodos de pago disponibles
+    /// </summary>
+    [HttpGet("metodos")]
+    public async Task<ActionResult> ObtenerMetodosPago()
+    {
+        try
+        {
+            var metodos = await _pagoService.ObtenerMetodosPagoAsync();
+            return Ok(metodos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al obtener métodos de pago", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Obtener estadísticas completas de pagos
+    /// </summary>
+    [HttpGet("estadisticas")]
+    [Authorize(Roles = "superadmin,admin")]
+    public async Task<ActionResult<EstadisticasPagosDto>> ObtenerEstadisticas(
+        [FromQuery] DateTime? fechaDesde = null,
+        [FromQuery] DateTime? fechaHasta = null)
+    {
+        try
+        {
+            var estadisticas = await _pagoService.ObtenerEstadisticasAsync(fechaDesde, fechaHasta);
+            return Ok(estadisticas);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al obtener estadísticas", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Obtener total recaudado en un rango de fechas
     /// </summary>
     [HttpGet("estadisticas/recaudacion")]

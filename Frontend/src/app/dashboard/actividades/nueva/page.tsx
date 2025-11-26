@@ -25,7 +25,6 @@ const actividadSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
       message: 'El precio debe ser un número válido mayor o igual a 0',
     }),
-  esCuotaBase: z.boolean().default(false),
 });
 
 type ActividadFormData = z.infer<typeof actividadSchema>;
@@ -40,15 +39,9 @@ export default function NuevaActividadPage() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<ActividadFormData>({
     resolver: zodResolver(actividadSchema),
-    defaultValues: {
-      esCuotaBase: false,
-    },
   });
-
-  const esCuotaBase = watch('esCuotaBase');
 
   const onSubmit = async (data: ActividadFormData) => {
     setIsSubmitting(true);
@@ -60,7 +53,6 @@ export default function NuevaActividadPage() {
         nombre: data.nombre.trim(),
         descripcion: data.descripcion?.trim() || undefined,
         precio: Number(data.precio),
-        esCuotaBase: data.esCuotaBase,
       };
 
       const nuevaActividad = await actividadesService.crear(actividadData);
@@ -175,54 +167,6 @@ export default function NuevaActividadPage() {
                 <p className="mt-1 text-sm text-red-600">{errors.precio.message}</p>
               )}
             </div>
-
-            <div className="flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  id="esCuotaBase"
-                  type="checkbox"
-                  {...register('esCuotaBase')}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="esCuotaBase" className="font-medium text-gray-700">
-                  Es cuota base
-                </label>
-                <p className="text-gray-500">
-                  Marca esta opción si es la cuota mensual obligatoria del club
-                </p>
-              </div>
-            </div>
-
-            {esCuotaBase && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-yellow-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">Cuota Base</h3>
-                    <div className="mt-2 text-sm text-yellow-700">
-                      <p>
-                        Esta actividad se aplicará automáticamente a todas las membresías como
-                        cuota base del club.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t">

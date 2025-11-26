@@ -23,7 +23,6 @@ public class ActividadEnMembresiaDto
     public int IdActividad { get; set; }
     public string NombreActividad { get; set; } = string.Empty;
     public decimal PrecioAlMomento { get; set; }
-    public bool EsCuotaBase { get; set; }
 }
 
 public class CrearMembresiaDto

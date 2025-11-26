@@ -94,6 +94,11 @@ const menuItems: MenuItem[] = [
         href: '/dashboard/pagos/nuevo',
         icon: <DollarSign className="w-4 h-4" />,
       },
+      {
+        label: 'Estadísticas',
+        href: '/dashboard/pagos/estadisticas',
+        icon: <Activity className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -134,7 +139,7 @@ const menuItems: MenuItem[] = [
     children: [
       {
         label: 'Usuarios',
-        href: '/dashboard/configuracion/usuarios',
+        href: '/dashboard/usuarios',
         icon: <UserCog className="w-4 h-4" />,
       },
       {

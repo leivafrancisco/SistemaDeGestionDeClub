@@ -34,7 +34,6 @@ public class ActividadService : IActividadService
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
-                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .ToListAsync();
@@ -52,7 +51,6 @@ public class ActividadService : IActividadService
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
-                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .FirstOrDefaultAsync();
@@ -79,7 +77,6 @@ public class ActividadService : IActividadService
             Nombre = dto.Nombre,
             Descripcion = dto.Descripcion,
             Precio = dto.Precio,
-            EsCuotaBase = dto.EsCuotaBase,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -93,7 +90,6 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
-            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }
@@ -123,7 +119,6 @@ public class ActividadService : IActividadService
         actividad.Nombre = dto.Nombre;
         actividad.Descripcion = dto.Descripcion;
         actividad.Precio = dto.Precio;
-        actividad.EsCuotaBase = dto.EsCuotaBase;
 
         await _context.SaveChangesAsync();
 
@@ -133,7 +128,6 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
-            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }

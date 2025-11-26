@@ -372,8 +372,7 @@ public class MembresiaService : IMembresiaService
             {
                 IdActividad = ma.IdActividad,
                 NombreActividad = ma.Actividad.Nombre,
-                PrecioAlMomento = ma.PrecioAlMomento,
-                EsCuotaBase = ma.Actividad.EsCuotaBase
+                PrecioAlMomento = ma.PrecioAlMomento
             }).ToList()
         };
     }

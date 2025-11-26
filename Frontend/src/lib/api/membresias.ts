@@ -13,11 +13,13 @@ export interface Membresia {
   numeroSocio: string;
   periodoAnio: number;
   periodoMes: number;
+  periodoTexto?: string;
   fechaInicio: string;
   fechaFin: string;
   totalCargado: number;
   totalPagado: number;
   saldo: number;
+  estaPaga?: boolean;
   actividades: MembresiaActividad[];
   fechaCreacion: string;
 }
@@ -39,15 +41,43 @@ export interface RemoverActividadDto {
   idActividad: number;
 }
 
+export interface FiltrosMembresias {
+  idSocio?: number;
+  periodoAnio?: number;
+  periodoMes?: number;
+  soloImpagas?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
 export const membresiasService = {
-  async obtenerTodas(idSocio?: number): Promise<Membresia[]> {
-    const params = idSocio ? `?idSocio=${idSocio}` : '';
-    const response = await apiClient.get<Membresia[]>(`/membresias${params}`);
+  async obtenerTodas(filtros?: FiltrosMembresias): Promise<Membresia[]> {
+    const params = new URLSearchParams();
+
+    if (filtros?.idSocio) params.append('idSocio', filtros.idSocio.toString());
+    if (filtros?.periodoAnio) params.append('periodoAnio', filtros.periodoAnio.toString());
+    if (filtros?.periodoMes) params.append('periodoMes', filtros.periodoMes.toString());
+    if (filtros?.soloImpagas !== undefined) params.append('soloImpagas', filtros.soloImpagas.toString());
+    if (filtros?.page) params.append('page', filtros.page.toString());
+    if (filtros?.pageSize) params.append('pageSize', filtros.pageSize.toString());
+
+    const queryString = params.toString();
+    const response = await apiClient.get<Membresia[]>(`/membresias${queryString ? '?' + queryString : ''}`);
     return response.data;
   },
 
   async obtenerPorId(id: number): Promise<Membresia> {
     const response = await apiClient.get<Membresia>(`/membresias/${id}`);
+    return response.data;
+  },
+
+  async obtenerPorSocio(idSocio: number): Promise<Membresia[]> {
+    const response = await apiClient.get<Membresia[]>(`/membresias?idSocio=${idSocio}`);
+    return response.data;
+  },
+
+  async obtenerImpagasPorSocio(idSocio: number): Promise<Membresia[]> {
+    const response = await apiClient.get<Membresia[]>(`/membresias?idSocio=${idSocio}&soloImpagas=true`);
     return response.data;
   },
 
