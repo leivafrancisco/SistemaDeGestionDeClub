@@ -72,7 +72,7 @@ export default function NuevaMembresiaPage() {
   const cargarActividades = async () => {
     try {
       const data = await actividadesService.obtenerTodas();
-      setActividades(data.filter(a => a.estaActiva));
+      setActividades(data);
     } catch (error) {
       console.error('Error al cargar actividades:', error);
       setError('Error al cargar las actividades disponibles');
