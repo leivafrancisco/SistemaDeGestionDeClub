@@ -1,0 +1,601 @@
+{
+	"info": {
+		"_postman_id": "sistema-club-collection",
+		"name": "Sistema Gestión Club",
+		"description": "Colección completa de endpoints para el Sistema de Gestión de Club de Fútbol",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Guardar el token automáticamente en la variable de entorno",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    console.log(\"Token guardado exitosamente\");",
+									"    ",
+									"    // Tests automáticos",
+									"    pm.test(\"Login exitoso\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"    ",
+									"    pm.test(\"Respuesta tiene token\", function () {",
+									"        pm.expect(jsonData).to.have.property('token');",
+									"    });",
+									"    ",
+									"    pm.test(\"Respuesta tiene usuario\", function () {",
+									"        pm.expect(jsonData).to.have.property('usuario');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombreUsuario\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"login"
+							]
+						},
+						"description": "Iniciar sesión con usuario admin. El token se guarda automáticamente en la variable de entorno."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Recepcionista",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    console.log(\"Token guardado exitosamente\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombreUsuario\": \"recepcionista\",\n  \"password\": \"recep123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"login"
+							]
+						},
+						"description": "Iniciar sesión con usuario recepcionista (solo lectura)."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Usuario Actual",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta tiene datos del usuario\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('nombreUsuario');",
+									"    pm.expect(jsonData).to.have.property('rol');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"me"
+							]
+						},
+						"description": "Obtener información del usuario actualmente autenticado."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación y gestión de usuarios"
+		},
+		{
+			"name": "Socios",
+			"item": [
+				{
+					"name": "Obtener Todos los Socios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta es un array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Socios?page=1&pageSize=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar por nombre, apellido, email, dni o número de socio",
+									"disabled": true
+								},
+								{
+									"key": "estaActivo",
+									"value": "true",
+									"description": "Filtrar por activos (true) o inactivos (false)",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página"
+								},
+								{
+									"key": "pageSize",
+									"value": "20",
+									"description": "Cantidad de resultados por página"
+								}
+							]
+						},
+						"description": "Obtener listado de socios con paginación y filtros opcionales."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Socio por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status es 200 o 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Respuesta tiene datos del socio\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('id');",
+									"        pm.expect(jsonData).to.have.property('numeroSocio');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Socios/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios",
+								"1"
+							]
+						},
+						"description": "Obtener un socio específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Socio por Número",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Socios/numero/SOC-0001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios",
+								"numero",
+								"SOC-0001"
+							]
+						},
+						"description": "Obtener un socio por su número de socio."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Socio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var socio = pm.response.json();",
+									"    pm.environment.set(\"ultimo_socio_id\", socio.id);",
+									"    console.log(\"Socio creado con ID:\", socio.id);",
+									"    ",
+									"    pm.test(\"Socio creado exitosamente\", function () {",
+									"        pm.response.to.have.status(201);",
+									"    });",
+									"    ",
+									"    pm.test(\"Respuesta tiene ID\", function () {",
+									"        pm.expect(socio).to.have.property('id');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"González\",\n  \"dni\": \"87654321\",\n  \"email\": \"carlos.gonzalez@email.com\",\n  \"telefono\": \"555-9876\",\n  \"direccion\": \"Calle Falsa 123\",\n  \"fechaNacimiento\": \"1985-03-20\",\n  \"numeroSocio\": \"SOC-0100\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Socios",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios"
+							]
+						},
+						"description": "Crear un nuevo socio. Requiere rol admin o superadmin."
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Socio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Socio actualizado exitosamente\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Carlos Andrés\",\n  \"apellido\": \"González Méndez\",\n  \"dni\": \"87654321\",\n  \"email\": \"carlos.gonzalez.nuevo@email.com\",\n  \"telefono\": \"555-9999\",\n  \"direccion\": \"Avenida Siempre Viva 742\",\n  \"fechaNacimiento\": \"1985-03-20\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Socios/{{ultimo_socio_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios",
+								"{{ultimo_socio_id}}"
+							]
+						},
+						"description": "Actualizar datos de un socio existente. Requiere rol admin o superadmin."
+					},
+					"response": []
+				},
+				{
+					"name": "Desactivar Socio",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Socio desactivado exitosamente\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Socios/{{ultimo_socio_id}}/desactivar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios",
+								"{{ultimo_socio_id}}",
+								"desactivar"
+							]
+						},
+						"description": "Dar de baja (soft delete) a un socio. Requiere rol admin o superadmin."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Total de Socios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta tiene total\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('total');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/Socios/estadisticas/total",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"Socios",
+								"estadisticas",
+								"total"
+							]
+						},
+						"description": "Obtener el total de socios activos en el sistema."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de socios"
+		},
+		{
+			"name": "System",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Sistema está activo\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Status es healthy\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('healthy');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Verificar que el servidor está activo y funcionando."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints del sistema"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://localhost:5000",
+			"type": "string"
+		}
+	]
+}

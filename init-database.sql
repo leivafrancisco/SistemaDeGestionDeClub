@@ -1,7 +1,7 @@
 -- Script de inicialización de la base de datos
 -- Sistema de Gestión de Club de Fútbol
 
-USE club_futbol_basico;
+USE gestion_socios;
 GO
 
 -- =============================================

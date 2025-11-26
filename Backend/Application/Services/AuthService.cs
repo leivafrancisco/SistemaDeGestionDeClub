@@ -43,7 +43,7 @@ public class AuthService : IAuthService
         }
         
         // Validar contraseña (en producción usar BCrypt)
-        if (!VerificarContrasena(dto.Contrasena, usuario.ContrasenaHash))
+        if (!VerificarContrasena(dto.Password, usuario.ContrasenaHash))
         {
             return null;
         }

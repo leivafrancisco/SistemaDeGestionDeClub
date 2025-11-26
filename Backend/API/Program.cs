@@ -17,6 +17,10 @@ builder.Services.AddDbContext<ClubDbContext>(options =>
 // Services
 builder.Services.AddScoped<ISocioService, SocioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IActividadService, ActividadService>();
+builder.Services.AddScoped<IMembresiaService, MembresiaService>();
+builder.Services.AddScoped<IPagoService, PagoService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "TuClaveSecretaSuperSeguraDeAlMenos32Caracteres!";
@@ -38,7 +42,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 // CORS
 builder.Services.AddCors(options =>

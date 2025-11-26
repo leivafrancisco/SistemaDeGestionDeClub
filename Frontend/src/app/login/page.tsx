@@ -10,7 +10,7 @@ import { LogIn, Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   nombreUsuario: z.string().min(1, 'El nombre de usuario es requerido'),
-  contrasena: z.string().min(1, 'La contraseña es requerida'),
+  password: z.string().min(1, 'La contraseña es requerida'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -51,7 +51,6 @@ export default function LoginPage() {
               <LogIn className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-800">Sistema de Gestión</h1>
-            <p className="text-gray-600 mt-2">Club de Fútbol</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -78,18 +77,18 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="contrasena" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña
               </label>
               <input
-                {...register('contrasena')}
+                {...register('password')}
                 type="password"
-                id="contrasena"
+                id="password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 placeholder="Ingresa tu contraseña"
               />
-              {errors.contrasena && (
-                <p className="mt-1 text-sm text-red-600">{errors.contrasena.message}</p>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
 
@@ -112,10 +111,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Usuario demo: <strong>admin</strong></p>
-            <p>Contraseña: <strong>admin123</strong></p>
-          </div>
+          
         </div>
       </div>
     </div>

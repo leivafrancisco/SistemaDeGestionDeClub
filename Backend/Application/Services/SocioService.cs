@@ -163,9 +163,11 @@ public class SocioService : ISocioService
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
-        
+
+        Console.WriteLine($"[DEBUG] Creando Persona - Nombre: {persona.Nombre}, DNI: {persona.Dni ?? "NULL"}");
         _context.Personas.Add(persona);
         await _context.SaveChangesAsync();
+        Console.WriteLine($"[DEBUG] Persona creada con ID: {persona.Id}, DNI guardado: {persona.Dni ?? "NULL"}");
         
         // Crear socio
         var socio = new Socio
@@ -208,11 +210,20 @@ public class SocioService : ISocioService
         }
         
         // Validar email único
-        if (await _context.Personas.AnyAsync(p => p.Email == dto.Email && p.Id != socio.IdPersona))
+        if (await _context.Personas.AnyAsync(p => p.Email == dto.Email && p.Id != socio.IdPersona && p.FechaEliminacion == null))
         {
             throw new InvalidOperationException("Ya existe una persona con este email");
         }
-        
+
+        // Validar que el DNI no exista (si se proporciona)
+        if (!string.IsNullOrEmpty(dto.Dni))
+        {
+            if (await _context.Personas.AnyAsync(p => p.Dni == dto.Dni && p.Id != socio.IdPersona && p.FechaEliminacion == null))
+            {
+                throw new InvalidOperationException("Ya existe una persona con este DNI");
+            }
+        }
+
         // Actualizar persona
         socio.Persona.Nombre = dto.Nombre;
         socio.Persona.Apellido = dto.Apellido;

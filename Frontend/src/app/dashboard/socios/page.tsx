@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { sociosService, type Socio } from '@/lib/api/socios';
 import {
   Users,
@@ -14,6 +15,9 @@ import {
   Filter,
   Download,
   MoreVertical,
+  Edit,
+  Eye,
+  UserX,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,10 +27,25 @@ export default function SociosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'todos' | 'activos' | 'inactivos'>('todos');
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   useEffect(() => {
     cargarSocios();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId !== null) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.relative')) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openMenuId]);
 
   const cargarSocios = async () => {
     try {
@@ -58,10 +77,10 @@ export default function SociosPage() {
           <h1 className="text-2xl font-bold text-gray-900">Socios</h1>
           <p className="text-gray-600">Gestiona los socios del club</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <Link href="/dashboard/socios/nuevo" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <Plus className="w-4 h-4" />
           Nuevo Socio
-        </button>
+        </Link>
       </div>
 
       {/* Filters and Search */}
@@ -223,9 +242,43 @@ export default function SociosPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreVertical className="w-4 h-4 text-gray-500" />
-                      </button>
+                      <div className="relative inline-block">
+                        <button
+                          onClick={() => setOpenMenuId(openMenuId === socio.id ? null : socio.id)}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4 text-gray-500" />
+                        </button>
+
+                        {openMenuId === socio.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                            <div className="py-1">
+                              <Link
+                                href={`/dashboard/socios/${socio.id}/editar`}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <Edit className="w-4 h-4" />
+                                Editar
+                              </Link>
+                              <button
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <Eye className="w-4 h-4" />
+                                Ver Detalle
+                              </button>
+                              <button
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <UserX className="w-4 h-4" />
+                                Desactivar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

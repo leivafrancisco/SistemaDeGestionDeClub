@@ -2,7 +2,7 @@ import apiClient from './client';
 
 export interface LoginDto {
   nombreUsuario: string;
-  contrasena: string;
+  password: string;
 }
 
 export interface Usuario {

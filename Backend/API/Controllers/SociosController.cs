@@ -93,6 +93,7 @@ public class SociosController : ControllerBase
     {
         try
         {
+            Console.WriteLine($"[DEBUG] Crear Socio - Nombre: {dto.Nombre}, Apellido: {dto.Apellido}, Email: {dto.Email}, DNI: {dto.Dni ?? "NULL"}, FechaNacimiento: {dto.FechaNacimiento?.ToString() ?? "NULL"}");
             var socio = await _socioService.CrearAsync(dto);
             return Ok(socio);
         }
