@@ -28,7 +28,7 @@ export interface CrearMembresiaDto {
   idSocio: number;
   periodoAnio: number;
   periodoMes: number;
-  actividadesIds: number[];
+  idsActividades: number[];
 }
 
 export interface AsignarActividadDto {

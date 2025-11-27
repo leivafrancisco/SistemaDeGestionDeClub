@@ -137,7 +137,7 @@ export default function NuevaMembresiaPage() {
         idSocio: data.idSocio,
         periodoAnio: data.periodoAnio,
         periodoMes: data.periodoMes,
-        actividadesIds: data.actividadesIds,
+        idsActividades: data.actividadesIds,
       };
 
       await membresiasService.crear(membresiaData);

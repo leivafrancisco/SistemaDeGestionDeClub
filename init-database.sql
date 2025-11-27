@@ -95,8 +95,8 @@ CREATE TABLE membresia_actividades (
     id_actividad INT NOT NULL,
     precio_al_momento DECIMAL(10, 2) NOT NULL,
     PRIMARY KEY (id_membresia, id_actividad),
-    FOREIGN KEY (id_membresia) REFERENCES membresias(id),
-    FOREIGN KEY (id_actividad) REFERENCES actividades(id)
+    FOREIGN KEY (id_membresia) REFERENCES membresias(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_actividad) REFERENCES actividades(id) ON DELETE CASCADE
 );
 
 -- Tabla pagos

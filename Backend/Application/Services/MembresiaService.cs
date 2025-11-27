@@ -144,6 +144,10 @@ public class MembresiaService : IMembresiaService
         _context.Membresias.Add(membresia);
         await _context.SaveChangesAsync();
 
+        Console.WriteLine($"[DEBUG] Membresía creada con ID: {membresia.Id}");
+        Console.WriteLine($"[DEBUG] IdsActividades recibidos: {string.Join(", ", dto.IdsActividades)}");
+        Console.WriteLine($"[DEBUG] Cantidad de actividades: {dto.IdsActividades.Count}");
+
         // Agregar actividades
         if (dto.IdsActividades.Any())
         {
@@ -151,8 +155,12 @@ public class MembresiaService : IMembresiaService
                 .Where(a => dto.IdsActividades.Contains(a.Id) && a.FechaEliminacion == null)
                 .ToListAsync();
 
+            Console.WriteLine($"[DEBUG] Actividades encontradas en DB: {actividades.Count}");
+
             foreach (var actividad in actividades)
             {
+                Console.WriteLine($"[DEBUG] Agregando actividad {actividad.Id} - {actividad.Nombre} - Precio: {actividad.Precio}");
+
                 var membresiaActividad = new MembresiaActividad
                 {
                     IdMembresia = membresia.Id,
@@ -163,7 +171,13 @@ public class MembresiaService : IMembresiaService
                 _context.MembresiaActividades.Add(membresiaActividad);
             }
 
+            Console.WriteLine($"[DEBUG] Guardando {actividades.Count} actividades en membresia_actividades...");
             await _context.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] Actividades guardadas exitosamente");
+        }
+        else
+        {
+            Console.WriteLine("[DEBUG] No se recibieron IdsActividades, no se agregarán actividades");
         }
 
         // Recargar la membresía con todas sus relaciones
