@@ -108,7 +108,19 @@ The backend follows Clean Architecture with four distinct layers:
 - `client.ts`: Axios instance with JWT interceptor
 - `auth.ts`: Authentication service (login, get current user)
 - `socios.ts`: Member management service
+- `actividades.ts`: Activity management service
+- `membresias.ts`: Membership management service
+- `pagos.ts`: Payment management service
+- `usuarios.ts`: User management service
 - All API calls include automatic token injection
+
+**Dashboard Views** (`Frontend/src/app/dashboard/`)
+- `socios/`: Member list, create, edit views
+- `actividades/`: Activity list and create views
+- `membresias/`: Membership list and create views (3-step wizard)
+- `pagos/`: Payment list and register views (3-step wizard)
+- `configuracion/roles/`: Role management under configuration section
+- `configuracion/usuarios/`: User management views
 
 ### Database Naming Convention
 
@@ -126,7 +138,30 @@ All table names are lowercase plural (e.g., `personas`, `usuarios`, `socios`, `m
 - `Socio` → One-to-Many → `Membresia` (monthly memberships)
 - `Membresia` → Many-to-Many → `Actividad` via `MembresiaActividad` (membership activities with price snapshot)
 - `Membresia` → One-to-Many → `Pago` (payments for memberships)
+- `Pago` → Many-to-One → `MetodoPago` (payment method: efectivo, transferencia, etc.)
+- `Pago` → Many-to-One → `Usuario` (user who registered the payment)
 - `Socio` → One-to-Many → `Asistencia` (attendance tracking)
+
+### Payment System
+
+**Payment Flow**:
+1. Admin selects a socio
+2. System shows unpaid memberships (saldo > 0)
+3. Admin selects payment method from `metodos_pago` table
+4. Payment is registered against specific membership
+5. System generates receipt (ComprobantePagoDto) with all details
+6. Membership saldo is automatically updated
+
+**Payment Methods** (`metodos_pago` table):
+- Stored in database, not hardcoded
+- Common methods: Efectivo, Transferencia, Tarjeta, etc.
+- Can be managed through database
+
+**Key Calculations**:
+- `Membresia.TotalCargado` = Sum of all activity prices at the time of membership creation
+- `Membresia.TotalPagado` = Sum of all payments for that membership
+- `Membresia.Saldo` = TotalCargado - TotalPagado
+- Membership is considered paid when Saldo <= 0
 
 ### Authentication & Authorization
 
@@ -141,21 +176,61 @@ All table names are lowercase plural (e.g., `personas`, `usuarios`, `socios`, `m
 - `admin`: Member management, payments, reports, attendance
 - `recepcionista`: Read-only member access, attendance registration
 
-### API Conventions
+### API Endpoints
 
-**Endpoints follow RESTful patterns**:
-- `GET /api/socios` - List with pagination, filtering, and search
-- `GET /api/socios/{id}` - Get by ID
-- `GET /api/socios/numero/{numeroSocio}` - Get by member number
-- `POST /api/socios` - Create (admin only) - Auto-generates numeroSocio in format SOC-0001, SOC-0002, etc.
-- `PUT /api/socios/{id}` - Update (admin only)
-- `PUT /api/socios/{id}/desactivar` - Soft delete (admin only)
+All endpoints follow RESTful conventions. Below is the complete API documentation:
 
-**Query Parameters** (example: socios):
-- `search`: Full-text search across nombre, apellido, email, dni, numero_socio
-- `estaActivo`: Boolean filter for active/inactive
-- `page`: Page number (default: 1)
-- `pageSize`: Items per page (default: 20)
+**Authentication** (`/api/auth`)
+- `POST /api/auth/login` - Login with username/password, returns JWT token
+- `GET /api/auth/me` - Get current authenticated user info (requires JWT)
+
+**Socios (Members)** (`/api/socios`)
+- `GET /api/socios` - List all members (pagination, filtering, search)
+  - Query params: `search`, `estaActivo`, `page`, `pageSize`
+  - Search across: nombre, apellido, email, dni, numero_socio
+- `GET /api/socios/{id}` - Get member by ID
+- `GET /api/socios/numero/{numeroSocio}` - Get member by member number
+- `POST /api/socios` - Create member (admin only) - Auto-generates numeroSocio format SOC-0001
+- `PUT /api/socios/{id}` - Update member (admin only)
+- `PUT /api/socios/{id}/desactivar` - Soft delete member (admin only)
+- `GET /api/socios/estadisticas/total` - Get total member count
+
+**Actividades (Activities)** (`/api/actividades`)
+- `GET /api/actividades` - List all activities (only active, filtered by FechaEliminacion)
+- `GET /api/actividades/{id}` - Get activity by ID
+- `POST /api/actividades` - Create activity (superadmin/admin only)
+- `PUT /api/actividades/{id}` - Update activity (superadmin/admin only)
+- `DELETE /api/actividades/{id}` - Soft delete activity (superadmin/admin only)
+
+**Membresías (Memberships)** (`/api/membresias`)
+- `GET /api/membresias` - List memberships with filters
+  - Query params: `idSocio`, `periodoAnio`, `periodoMes`, `soloImpagas`, `page`, `pageSize`
+- `GET /api/membresias/{id}` - Get membership by ID
+- `POST /api/membresias` - Create membership (admin only)
+- `PUT /api/membresias/{id}` - Update membership activities (admin only)
+- `DELETE /api/membresias/{id}` - Soft delete membership (admin only)
+- `GET /api/membresias/estadisticas/total` - Get total membership count
+- `POST /api/membresias/asignar-actividad` - Assign activity to membership (recepcionista can do this)
+- `POST /api/membresias/remover-actividad` - Remove activity from membership (only if no payments)
+
+**Pagos (Payments)** (`/api/pagos`)
+- `GET /api/pagos` - List payments with filters
+  - Query params: `idMembresia`, `idSocio`, `idMetodoPago`, `fechaDesde`, `fechaHasta`, `page`, `pageSize`
+- `GET /api/pagos/{id}` - Get payment by ID
+- `POST /api/pagos` - Register payment and generate receipt (admin only)
+- `GET /api/pagos/{id}/comprobante` - Generate payment receipt
+- `DELETE /api/pagos/{id}` - Void payment (admin only)
+- `GET /api/pagos/metodos` - Get available payment methods from metodos_pago table
+- `GET /api/pagos/estadisticas` - Get payment statistics (admin only)
+- `GET /api/pagos/estadisticas/recaudacion` - Get total collection by date range (admin only)
+
+**Usuarios (Users)** (`/api/usuarios`)
+- `GET /api/usuarios` - List all users (superadmin/admin only)
+  - Query params: `rol`, `estaActivo`
+- `GET /api/usuarios/{id}` - Get user by ID (superadmin/admin only)
+- `POST /api/usuarios` - Create user (superadmin only)
+- `PUT /api/usuarios/{id}` - Update user (superadmin only)
+- `PUT /api/usuarios/{id}/desactivar` - Deactivate user (superadmin only)
 
 ### Configuration Files
 
@@ -176,6 +251,27 @@ All entities implement soft delete via `FechaEliminacion` (nullable DateTime):
 - Queries should filter by `FechaEliminacion == null` for active records
 - `Socio.EstaActivo` provides explicit active/inactive flag
 
+### Business Rules
+
+**Membership Management**:
+- Cannot create duplicate memberships for same socio + period (periodoAnio + periodoMes)
+- Memberships store activity prices at moment of creation (price snapshot in MembresiaActividad)
+- Activities can be added/removed from memberships via special endpoints
+- Removing activity is only allowed if no payments have been made
+- Recepcionistas can assign/remove activities but cannot create/delete memberships
+
+**Activity Management**:
+- Activity prices are stored in each MembresiaActividad (historical pricing)
+- Changing activity price doesn't affect existing memberships
+- Soft delete prevents activity removal if used in active memberships
+
+**Payment Registration**:
+- Payments are always associated with a specific membership
+- Multiple payments can be made for a single membership (partial payments)
+- Payment receipt includes: socio info, membership details, payment method, amount, date
+- Only admins and superadmins can register/void payments
+- Payment amounts must be positive and cannot exceed membership saldo
+
 ### Development Notes
 
 - API runs on `https://localhost:5000` with Swagger UI at root (`/`)
@@ -186,6 +282,7 @@ All entities implement soft delete via `FechaEliminacion` (nullable DateTime):
 - Entity Framework tracks changes and auto-updates `FechaActualizacion` on save
 - **Member numbers (numeroSocio)** are auto-generated by backend in SocioService.CrearAsync (format: SOC-0001, SOC-0002, etc.)
 - CrearSocioDto does NOT include numeroSocio field - it's generated server-side
+- Backend already filters inactive entities (FechaEliminacion != null), so frontend doesn't need additional filtering
 
 ### Form Validation Standards
 
@@ -194,6 +291,38 @@ All entities implement soft delete via `FechaEliminacion` (nullable DateTime):
 - **DNI**: Only numbers, max 8 digits, blocks non-numeric input via onKeyPress
 - **Email**: Standard email format, max 100 chars, auto-lowercase on submit
 - **Fecha de Nacimiento**: Date type input with max set to today's date
+
+### Frontend UI Patterns
+
+**Step-by-Step Wizard Pattern**:
+Complex forms use a multi-step wizard pattern for better UX:
+- `membresias/nueva/page.tsx`: 3-step wizard (Select member → Select activities → Review and confirm)
+  - Automatic total calculation based on selected activities
+  - Real-time validation and step navigation
+  - Prevents duplicate memberships for same period
+- `pagos/nuevo/page.tsx`: 3-step wizard (Select member → Select unpaid membership → Payment details)
+  - Dynamically loads payment methods from database (metodos_pago table)
+  - Shows membership details and outstanding balance
+  - Generates payment receipt on successful registration
+
+**TailwindCSS Color Conventions**:
+- Use `blue-*` classes for primary actions and highlights
+- Use `green-*` for success states (paid, active)
+- Use `red-*` for warning/error states (unpaid, inactive)
+- Use `gray-*` for neutral elements and borders
+
+### Important Field Changes
+
+**Removed Fields** (no longer in use):
+- `Actividad.EsCuotaBase` / `es_cuota_base` - Removed from entity, DTOs, services, and all UI components
+  - All activities are now treated equally when calculating membership totals
+  - No special "base fee" concept exists in the system
+
+**Auto-Generated Fields**:
+- `Socio.NumeroSocio` - Auto-generated in format SOC-0001, SOC-0002, etc.
+  - Generated server-side by SocioService.CrearAsync
+  - NOT included in CrearSocioDto
+  - Sequential numbering based on max existing number + 1
 
 ### Test Credentials
 
