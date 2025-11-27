@@ -18,15 +18,18 @@ public class UsuariosController : ControllerBase
     }
 
     /// <summary>
-    /// Crear un nuevo usuario (admin o recepcionista) - Solo superadmin
+    /// Crear un nuevo usuario - Admin puede crear recepcionistas, Superadmin puede crear admin o recepcionistas
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "superadmin")]
+    [Authorize(Roles = "superadmin,admin")]
     public async Task<ActionResult<UsuarioDetalleDto>> Crear([FromBody] CrearUsuarioDto dto)
     {
         try
         {
-            var usuario = await _usuarioService.CrearAsync(dto);
+            // Obtener el rol del usuario actual desde el token
+            var currentUserRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            var usuario = await _usuarioService.CrearAsync(dto, currentUserRole);
             return CreatedAtAction(nameof(ObtenerPorId), new { id = usuario!.Id }, usuario);
         }
         catch (ArgumentException ex)
@@ -36,6 +39,10 @@ public class UsuariosController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
         }
         catch (Exception ex)
         {

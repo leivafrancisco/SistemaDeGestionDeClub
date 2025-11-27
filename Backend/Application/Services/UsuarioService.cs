@@ -7,7 +7,7 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface IUsuarioService
 {
-    Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto);
+    Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto, string? currentUserRole = null);
     Task<UsuarioDetalleDto?> ObtenerPorIdAsync(int id);
     Task<List<UsuarioDetalleDto>> ObtenerTodosAsync(string? rol = null, bool? estaActivo = null);
     Task<UsuarioDetalleDto?> ActualizarAsync(int id, ActualizarUsuarioDto dto);
@@ -23,13 +23,39 @@ public class UsuarioService : IUsuarioService
         _context = context;
     }
 
-    public async Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto)
+    public async Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto, string? currentUserRole = null)
     {
-        // Validar que el rol sea válido (solo admin o recepcionista)
-        var rolesPermitidos = new[] { "admin", "recepcionista" };
-        if (!rolesPermitidos.Contains(dto.Rol.ToLower()))
+        // Validar permisos de creación según el rol del usuario actual
+        var rolACrear = dto.Rol.ToLower();
+
+        if (!string.IsNullOrEmpty(currentUserRole))
         {
-            throw new ArgumentException("El rol debe ser 'admin' o 'recepcionista'");
+            if (currentUserRole.ToLower() == "admin")
+            {
+                // Admin solo puede crear recepcionistas
+                if (rolACrear != "recepcionista")
+                {
+                    throw new UnauthorizedAccessException("Los administradores solo pueden crear usuarios con rol 'recepcionista'");
+                }
+            }
+            else if (currentUserRole.ToLower() == "superadmin")
+            {
+                // Superadmin puede crear admin o recepcionista
+                var rolesPermitidos = new[] { "admin", "recepcionista" };
+                if (!rolesPermitidos.Contains(rolACrear))
+                {
+                    throw new ArgumentException("El rol debe ser 'admin' o 'recepcionista'");
+                }
+            }
+        }
+        else
+        {
+            // Si no se proporciona rol actual, solo permitir admin o recepcionista
+            var rolesPermitidos = new[] { "admin", "recepcionista" };
+            if (!rolesPermitidos.Contains(rolACrear))
+            {
+                throw new ArgumentException("El rol debe ser 'admin' o 'recepcionista'");
+            }
         }
 
         // Verificar que el nombre de usuario no exista

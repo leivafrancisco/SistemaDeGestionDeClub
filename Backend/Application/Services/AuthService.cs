@@ -109,7 +109,7 @@ public class AuthService : IAuthService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(15), // Token expira en 15 minutos
+            expires: DateTime.UtcNow.AddHours(24), // Token expira en 24 horas
             signingCredentials: creds
         );
         
