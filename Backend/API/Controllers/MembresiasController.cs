@@ -23,8 +23,8 @@ public class MembresiasController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<MembresiaDto>>> ObtenerTodos(
         [FromQuery] int? idSocio = null,
-        [FromQuery] short? periodoAnio = null,
-        [FromQuery] byte? periodoMes = null,
+        [FromQuery] DateTime? fechaDesde = null,
+        [FromQuery] DateTime? fechaHasta = null,
         [FromQuery] bool? soloImpagas = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -34,8 +34,8 @@ public class MembresiasController : ControllerBase
             var filtros = new FiltrosMembresiasDto
             {
                 IdSocio = idSocio,
-                PeriodoAnio = periodoAnio,
-                PeriodoMes = periodoMes,
+                FechaDesde = fechaDesde,
+                FechaHasta = fechaHasta,
                 SoloImpagas = soloImpagas,
                 Page = page,
                 PageSize = pageSize

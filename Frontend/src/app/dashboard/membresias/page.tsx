@@ -36,21 +36,13 @@ export default function MembresiasPage() {
     }
   };
 
-  const getMesNombre = (mes: number) => {
-    const meses = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    return meses[mes - 1];
-  };
-
   return (
     <div>
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Membresías</h1>
-          <p className="text-gray-600">Gestiona las membresías mensuales de los socios</p>
+          <p className="text-gray-600">Gestiona las membresías de los socios</p>
         </div>
         <Link
           href="/dashboard/membresias/nueva"
@@ -168,7 +160,10 @@ export default function MembresiasPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="w-4 h-4" />
-                        {getMesNombre(membresia.periodoMes)} {membresia.periodoAnio}
+                        <div>
+                          <div>{new Date(membresia.fechaInicio).toLocaleDateString('es-AR')}</div>
+                          <div className="text-xs text-gray-500">a {new Date(membresia.fechaFin).toLocaleDateString('es-AR')}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">

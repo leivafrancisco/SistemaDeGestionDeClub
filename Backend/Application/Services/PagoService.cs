@@ -360,14 +360,13 @@ public class PagoService : IPagoService
 
     private PagoDto MapearADto(Pago pago)
     {
-        var nombresMeses = new CultureInfo("es-ES").DateTimeFormat.MonthNames;
-        var nombreMes = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nombresMeses[pago.Membresia.PeriodoMes - 1]);
+        var periodoMembresia = $"{pago.Membresia.FechaInicio:dd/MM/yyyy} - {pago.Membresia.FechaFin:dd/MM/yyyy}";
 
         return new PagoDto
         {
             Id = pago.Id,
             IdMembresia = pago.IdMembresia,
-            PeriodoMembresia = $"{nombreMes} {pago.Membresia.PeriodoAnio}",
+            PeriodoMembresia = periodoMembresia,
             IdSocio = pago.Membresia.IdSocio,
             NumeroSocio = pago.Membresia.Socio.NumeroSocio,
             NombreSocio = pago.Membresia.Socio.Persona.NombreCompleto,

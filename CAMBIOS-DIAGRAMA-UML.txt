@@ -1,0 +1,442 @@
+================================================================================
+              RESUMEN DE MODIFICACIONES AL DIAGRAMA UML
+================================================================================
+
+Este documento detalla las diferencias entre el diagrama UML original
+proporcionado y el diagrama actualizado basado en la implementación real
+del backend.
+
+================================================================================
+1. CAMBIOS EN LA ENTIDAD "ROL"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +crearRol(nombre) : void
+  +actualizarRol(nombre) : void
+  +eliminarRol() : void
+
+DIAGRAMA ACTUALIZADO:
+  [Sin métodos - entidad de solo datos]
+  +id: int
+  +nombre: string
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+
+RAZÓN DEL CAMBIO:
+  ✓ Los roles son datos semilla en la base de datos
+  ✓ No hay servicio RolService implementado
+  ✓ Los roles se gestionan directamente en la BD
+  ✓ Agregados campos de auditoría (creación, actualización, eliminación)
+
+================================================================================
+2. CAMBIOS EN LA ENTIDAD "PERSONA"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +dni: string
+  +fecha_nacimiento: date
+  +registrar() : void
+  +modificar(datos) : void
+  +eliminar() : void
+
+DIAGRAMA ACTUALIZADO:
+  +dni: string
+  +fechaNacimiento: DateTime
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +NombreCompleto: string [propiedad calculada]
+  [Sin métodos propios]
+
+RAZÓN DEL CAMBIO:
+  ✓ Persona es gestionada indirectamente a través de Socio y Usuario
+  ✓ No hay PersonaService independiente
+  ✓ Agregada propiedad calculada NombreCompleto
+  ✓ Agregados campos de auditoría
+
+================================================================================
+3. CAMBIOS EN LA ENTIDAD "USUARIO"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +registrar() : void
+  +cambiarContrasena(passActual, passNuevo) : void
+  +activar() : void
+  +desactivar() : void
+
+DIAGRAMA ACTUALIZADO:
+  +idPersona: int
+  +idRol: int
+  +nombreUsuario: string
+  +contrasenaHash: string
+  +estaActivo: bool
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +CrearAsync(dto, rolCreador) UsuarioDetalleDto
+  +ObtenerPorIdAsync(id) UsuarioDetalleDto
+  +ObtenerTodosAsync(rol, estaActivo) List<UsuarioDetalleDto>
+  +ActualizarAsync(id, dto) UsuarioDetalleDto
+  +DesactivarAsync(id) bool
+
+RAZÓN DEL CAMBIO:
+  ✓ Métodos reflejan UsuarioService.cs real
+  ✓ No existe cambiarContrasena implementado
+  ✓ activar/desactivar consolidados en DesactivarAsync
+  ✓ Agregados FKs (idPersona, idRol)
+  ✓ Agregados campos de auditoría
+  ✓ Firma de métodos refleja implementación async con DTOs
+
+FUNCIONALIDADES NUEVAS:
+  ✓ CrearAsync con validación de permisos por rol
+    (admin crea recepcionistas, superadmin crea admin/recepcionistas)
+
+================================================================================
+4. CAMBIOS EN LA ENTIDAD "SOCIO"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +numero_socio: string
+  +esta_activo: bool
+  +fecha_alta: date
+  +fecha_baja: date
+  +registrar() : void
+  +darAlta() : void
+  +darBaja() : void
+  +consultarEstado() : bool
+
+DIAGRAMA ACTUALIZADO:
+  +idPersona: int
+  +numeroSocio: string [auto-generado]
+  +estaActivo: bool
+  +fechaAlta: DateTime
+  +fechaBaja: DateTime?
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +CrearAsync(dto) SocioDetalleDto
+  +ObtenerPorIdAsync(id) SocioDetalleDto
+  +ObtenerTodosAsync(filtros) List<SocioDto>
+  +ActualizarAsync(id, dto) SocioDetalleDto
+  +DesactivarAsync(id) bool
+  +ContarTotalAsync() int
+
+RAZÓN DEL CAMBIO:
+  ✓ Métodos reflejan SocioService.cs real
+  ✓ numeroSocio se auto-genera (SOC-0001, SOC-0002...)
+  ✓ darAlta/darBaja consolidados en CrearAsync/DesactivarAsync
+  ✓ consultarEstado es propiedad estaActivo
+  ✓ Agregados FK y campos de auditoría
+  ✓ Agregado método de conteo
+
+FUNCIONALIDADES NUEVAS:
+  ✓ Auto-generación de número de socio
+  ✓ Búsqueda avanzada con filtros
+  ✓ Paginación en listados
+
+================================================================================
+5. CAMBIOS EN LA ENTIDAD "ACTIVIDAD"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +nombre: string
+  +descripcion: string
+  +precio: decimal
+  +es_cuota_base: bool ← ELIMINADO
+  +registrarActividad(nombre, precio) : void
+  +actualizarPrecio(precio) : void
+  +esActividadBase() : bool
+
+DIAGRAMA ACTUALIZADO:
+  +nombre: string
+  +descripcion: string
+  +precio: decimal
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +ObtenerTodas() List<ActividadDto>
+  +ObtenerPorId(id) ActividadDto
+  +Crear(dto) ActividadDto
+  +Actualizar(id, dto) ActividadDto
+  +Eliminar(id) bool
+
+RAZÓN DEL CAMBIO:
+  ✓ ELIMINADO: Campo "es_cuota_base" (ya no existe)
+  ✓ Métodos reflejan ActividadService.cs real
+  ✓ actualizarPrecio incluido en Actualizar genérico
+  ✓ esActividadBase eliminado (todas son iguales)
+  ✓ Agregados campos de auditoría
+
+================================================================================
+6. CAMBIOS EN LA ENTIDAD "MEMBRESIA"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +periodo_anio: int ← ELIMINADO
+  +periodo_mes: int ← ELIMINADO
+  +fecha_inicio: date
+  +fecha_fin: date
+  +registrar() : void
+  +finalizar() : void
+  +calcularMonto() decimal
+
+DIAGRAMA ACTUALIZADO:
+  +idSocio: int
+  +fechaInicio: DateTime ← AHORA ES EL CAMPO PRINCIPAL
+  +fechaFin: DateTime ← AHORA ES EL CAMPO PRINCIPAL
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +TotalCargado: decimal [calculado]
+  +TotalPagado: decimal [calculado]
+  +Saldo: decimal [calculado]
+  +ObtenerTodosAsync(filtros) List<MembresiaDto>
+  +ObtenerPorIdAsync(id) MembresiaDto
+  +CrearAsync(dto) MembresiaDto
+  +ActualizarAsync(id, dto) MembresiaDto
+  +EliminarAsync(id) bool
+  +AsignarActividadAsync(dto) MembresiaDto
+  +RemoverActividadAsync(dto) MembresiaDto
+  +ContarTotalAsync() int
+
+RAZÓN DEL CAMBIO:
+  ✓ ELIMINADO: periodo_anio y periodo_mes
+  ✓ Ahora usa fechaInicio y fechaFin como campos principales
+  ✓ Permite membresías de cualquier duración (no solo mensuales)
+  ✓ Métodos reflejan MembresiaService.cs real
+  ✓ calcularMonto ahora son 3 propiedades calculadas
+  ✓ finalizar no existe (se usa soft delete)
+  ✓ Agregados métodos de gestión de actividades
+
+FUNCIONALIDADES NUEVAS:
+  ✓ Validación de solapamiento de fechas (no solo período)
+  ✓ Asignar/remover actividades dinámicamente
+  ✓ Propiedades calculadas para totales y saldo
+
+NOTA IMPORTANTE:
+  Esta fue una migración mayor realizada el 28/11/2025
+  Script de migración: migration-membresias-fechas.sql
+
+================================================================================
+7. CAMBIOS EN LA ENTIDAD "MEMBRESIA_ACTIVIDAD"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +precio_al_momento: decimal
+  +agregarActividad(id_actividad) : void
+  +quitarActividad(id_actividad) : void
+
+DIAGRAMA ACTUALIZADO:
+  +idMembresia: int (PK)
+  +idActividad: int (PK)
+  +precioAlMomento: decimal
+  [Sin métodos propios]
+
+RAZÓN DEL CAMBIO:
+  ✓ Es una entidad de asociación (tabla intermedia)
+  ✓ agregar/quitar se manejan en MembresiaService
+  ✓ Agregados campos PK compuestos
+  ✓ Captura snapshot de precio histórico
+
+================================================================================
+8. CAMBIOS EN LA ENTIDAD "METODO_PAGO"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +nombre: string
+  +agregarMetodo(nombre) : void
+  +modificarMetodo(nombre) : void
+
+DIAGRAMA ACTUALIZADO:
+  +id: int
+  +nombre: string (unique)
+  [Sin métodos - entidad de solo datos]
+
+RAZÓN DEL CAMBIO:
+  ✓ Métodos de pago se gestionan directamente en BD
+  ✓ No hay servicio MetodoPagoService
+  ✓ Son datos de configuración del sistema
+
+================================================================================
+9. CAMBIOS EN LA ENTIDAD "PAGO"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +monto: decimal
+  +fecha_pago: date
+  +registrarPago(monto, metodo) : void
+  +calcularDescuento() decimal
+
+DIAGRAMA ACTUALIZADO:
+  +idMembresia: int
+  +idMetodoPago: int
+  +idUsuarioProcesa: int?
+  +monto: decimal
+  +fechaPago: DateTime
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  +RegistrarAsync(dto) ComprobantePagoDto
+  +ObtenerPorIdAsync(id) PagoDetalleDto
+  +ObtenerTodosAsync(filtros) List<PagoDto>
+  +GenerarComprobanteAsync(id) ComprobantePagoDto
+  +AnularAsync(id) bool
+  +ObtenerMetodosPagoAsync() List<MetodoPagoDto>
+  +ObtenerEstadisticasAsync(filtros) EstadisticasPagosDto
+
+RAZÓN DEL CAMBIO:
+  ✓ Métodos reflejan PagoService.cs real
+  ✓ calcularDescuento NO existe (no hay descuentos)
+  ✓ Agregados FKs (idMembresia, idMetodoPago, idUsuarioProcesa)
+  ✓ Agregados campos de auditoría
+  ✓ RegistrarAsync genera comprobante automáticamente
+
+FUNCIONALIDADES NUEVAS:
+  ✓ Generación de comprobantes (PAG-XXXXXX-YYYY)
+  ✓ Anulación de pagos (soft delete)
+  ✓ Estadísticas de pagos
+  ✓ Registro de usuario que procesa
+
+================================================================================
+10. CAMBIOS EN LA ENTIDAD "ASISTENCIA"
+================================================================================
+
+DIAGRAMA ORIGINAL:
+  +fecha_hora_ingreso: datetime
+  +registrarAsistencia(id_socio) : void
+
+DIAGRAMA ACTUALIZADO:
+  +idSocio: int
+  +fechaHoraIngreso: DateTime
+  +fechaCreacion: DateTime
+  +fechaActualizacion: DateTime
+  +fechaEliminacion: DateTime?
+  [Sin métodos - funcionalidad básica]
+
+RAZÓN DEL CAMBIO:
+  ✓ Entidad simple de registro
+  ✓ No hay AsistenciaService completo implementado
+  ✓ Agregados FK y campos de auditoría
+
+================================================================================
+11. CAMBIOS EN LAS RELACIONES
+================================================================================
+
+RELACIONES ACTUALIZADAS:
+  Persona "1" -- "0..1" Usuario
+    - Antes: "1" o-- "1"
+    - Ahora: Una persona puede existir sin usuario
+
+  Persona "1" -- "0..1" Socio
+    - Antes: "1" o-- "1"
+    - Ahora: Una persona puede existir sin ser socio
+
+  Usuario "n" -- "1" Rol
+    - Antes: "1" o-- "1"
+    - Ahora: Muchos usuarios pueden tener el mismo rol
+
+RELACIONES SIN CAMBIOS:
+  ✓ Socio "1" -- "0..*" Membresia
+  ✓ MetodoPago "1" -- "0..*" Pago
+  ✓ Membresia "1" -- "0..*" MembresiaActividad
+  ✓ Actividad "1" -- "0..*" MembresiaActividad
+  ✓ Membresia "1" -- "0..*" Pago
+  ✓ Usuario "1" -- "0..*" Pago (procesa)
+  ✓ Socio "1" -- "0..*" Asistencia
+
+================================================================================
+12. CONVENCIONES Y PATRONES AGREGADOS
+================================================================================
+
+SOFT DELETE:
+  Todas las entidades incluyen:
+    +fechaEliminacion: DateTime? (nullable)
+
+  Permite:
+    ✓ Recuperación de datos
+    ✓ Auditoría completa
+    ✓ No romper integridad referencial
+
+AUDITORÍA:
+  Todas las entidades incluyen:
+    +fechaCreacion: DateTime (auto-generado)
+    +fechaActualizacion: DateTime (auto-actualizado)
+
+ASYNC/AWAIT:
+  Todos los métodos de servicios son async:
+    - Nomenclatura: NombreAsync
+    - Retornan: Task<T>
+
+DTOS:
+  Los métodos retornan DTOs, no entidades:
+    - CrearSocioDto (entrada)
+    - SocioDetalleDto (salida)
+    - SocioDto (lista)
+
+================================================================================
+13. CAMPOS AUTO-GENERADOS
+================================================================================
+
+NUMERO DE SOCIO:
+  - Campo: Socio.numeroSocio
+  - Formato: SOC-0001, SOC-0002, SOC-0003...
+  - Generado en: SocioService.CrearAsync
+  - NO incluir en CrearSocioDto
+
+COMPROBANTE DE PAGO:
+  - Formato: PAG-{id:6 dígitos}-{año}
+  - Ejemplo: PAG-000123-2025
+  - Generado en: PagoService.RegistrarAsync
+
+================================================================================
+14. RESUMEN DE CAMBIOS CRÍTICOS
+================================================================================
+
+ELIMINACIONES:
+  ❌ Actividad.es_cuota_base
+  ❌ Membresia.periodo_anio
+  ❌ Membresia.periodo_mes
+  ❌ Usuario.cambiarContrasena()
+  ❌ Pago.calcularDescuento()
+
+ADICIONES:
+  ✅ Soft delete en todas las entidades
+  ✅ Auditoría (fechaCreacion, fechaActualizacion)
+  ✅ Propiedades calculadas (NombreCompleto, Totales, Saldo)
+  ✅ Métodos async que reflejan servicios reales
+  ✅ DTOs como tipos de retorno
+  ✅ Validaciones de permisos por rol
+  ✅ Auto-generación de números
+
+MODIFICACIONES:
+  🔄 Membresía: De período mensual a rango de fechas flexible
+  🔄 Usuario: Permisos granulares de creación
+  🔄 Todos los métodos: Nomenclatura async + DTOs
+
+================================================================================
+15. ARCHIVOS DE REFERENCIA
+================================================================================
+
+DIAGRAMA ACTUALIZADO:
+  📄 DiagramaClases.md
+
+DOCUMENTACIÓN COMPLETA:
+  📄 README-ARQUITECTURA.txt
+
+GUÍA DE DESARROLLO:
+  📄 CLAUDE.md
+
+MIGRACIÓN DE BASE DE DATOS:
+  📄 migration-membresias-fechas.sql
+
+ESTE DOCUMENTO:
+  📄 CAMBIOS-DIAGRAMA-UML.txt
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Fecha: 28 de noviembre de 2025
+Versión: 1.2.0
+Autor: Sistema actualizado automáticamente
