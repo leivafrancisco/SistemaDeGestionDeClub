@@ -89,7 +89,7 @@ export default function EditarRolPage() {
             onClick={() => router.push('/dashboard/configuracion/roles')}
             className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
           >
-            ← Volver a Roles
+            ← Volver a Staff
           </button>
         </div>
 
@@ -111,7 +111,7 @@ export default function EditarRolPage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Editar Rol</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Editar Rol de Staff</h1>
               <p className="text-gray-600">Modificar el nombre del rol: {rolOriginal}</p>
             </div>
           </div>

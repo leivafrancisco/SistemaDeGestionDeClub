@@ -143,7 +143,7 @@ const menuItems: MenuItem[] = [
         icon: <UserCog className="w-4 h-4" />,
       },
       {
-        label: 'Roles',
+        label: 'Staff',
         href: '/dashboard/configuracion/roles',
         icon: <Shield className="w-4 h-4" />,
       },

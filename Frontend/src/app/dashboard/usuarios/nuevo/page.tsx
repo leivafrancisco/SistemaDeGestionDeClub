@@ -21,7 +21,7 @@ const usuarioSchema = z.object({
     .max(100, 'La contraseña no puede exceder 100 caracteres'),
   nombre: z
     .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .min(2, 'el campo nombre es requerido')
     .max(50, 'El nombre no puede exceder 50 caracteres')
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/, 'El nombre solo puede contener letras'),
   apellido: z

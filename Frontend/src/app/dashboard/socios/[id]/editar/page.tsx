@@ -12,7 +12,7 @@ import { sociosService, ActualizarSocioDto, Socio } from '@/lib/api/socios';
 const socioSchema = z.object({
   nombre: z
     .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .min(2, '')
     .max(50, 'El nombre no puede exceder 50 caracteres')
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/, 'El nombre solo puede contener letras'),
   apellido: z
@@ -26,11 +26,10 @@ const socioSchema = z.object({
     .max(100, 'El email no puede exceder 100 caracteres'),
   dni: z
     .string()
-    .regex(/^\d*$/, 'El DNI solo puede contener números')
-    .max(8, 'El DNI no puede exceder 8 dígitos')
-    .optional()
-    .or(z.literal('')),
-  fechaNacimiento: z.string().optional(),
+    .min(1, 'El campo DNI es obligatorio')
+    .regex(/^\d{7,8}$/, 'El DNI debe tener 7 u 8 dígitos')
+    .max(8, 'El DNI no puede exceder 8 dígitos'),
+  fechaNacimiento: z.string().min(1, 'El campo fecha de nacimiento es obligatorio'),
 });
 
 type SocioFormData = z.infer<typeof socioSchema>;
@@ -224,7 +223,7 @@ export default function EditarSocioPage() {
 
             <div>
               <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
-                DNI
+                DNI *
               </label>
               <input
                 type="text"
@@ -246,7 +245,7 @@ export default function EditarSocioPage() {
 
             <div className="md:col-span-2">
               <label htmlFor="fechaNacimiento" className="block text-sm font-medium text-gray-700">
-                Fecha de Nacimiento
+                Fecha de Nacimiento *
               </label>
               <input
                 type="date"
@@ -255,6 +254,9 @@ export default function EditarSocioPage() {
                 className="mt-1 block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
                 max={new Date().toISOString().split('T')[0]}
               />
+              {errors.fechaNacimiento && (
+                <p className="mt-1 text-sm text-red-600">{errors.fechaNacimiento.message}</p>
+              )}
             </div>
           </div>
 

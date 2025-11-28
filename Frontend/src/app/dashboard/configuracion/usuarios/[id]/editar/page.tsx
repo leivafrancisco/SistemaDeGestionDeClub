@@ -24,12 +24,12 @@ import Link from 'next/link';
 const actualizarUsuarioSchema = z.object({
   nombre: z
     .string()
-    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .min(1, 'El campo nombre es requerido')
     .max(50, 'El nombre no puede exceder 50 caracteres')
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras'),
   apellido: z
     .string()
-    .min(2, 'El apellido debe tener al menos 2 caracteres')
+    .min(1, 'El campo apellido es requerido')
     .max(50, 'El apellido no puede exceder 50 caracteres')
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'Solo se permiten letras'),
   email: z

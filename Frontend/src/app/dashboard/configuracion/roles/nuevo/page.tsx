@@ -78,7 +78,7 @@ export default function NuevoRolPage() {
               <Shield className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Nuevo Rol</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Nuevo Rol de Staff</h1>
               <p className="text-sm text-gray-500 mt-1">
                 Crea un nuevo rol personalizado para el sistema
               </p>
