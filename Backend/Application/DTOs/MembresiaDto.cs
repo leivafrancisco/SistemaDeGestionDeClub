@@ -6,9 +6,6 @@ public class MembresiaDto
     public int IdSocio { get; set; }
     public string NumeroSocio { get; set; } = string.Empty;
     public string NombreSocio { get; set; } = string.Empty;
-    public short PeriodoAnio { get; set; }
-    public byte PeriodoMes { get; set; }
-    public string PeriodoTexto { get; set; } = string.Empty; // Ej: "Noviembre 2025"
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public decimal TotalCargado { get; set; }
@@ -28,8 +25,8 @@ public class ActividadEnMembresiaDto
 public class CrearMembresiaDto
 {
     public int IdSocio { get; set; }
-    public short PeriodoAnio { get; set; }
-    public byte PeriodoMes { get; set; }
+    public DateTime FechaInicio { get; set; }
+    public DateTime FechaFin { get; set; }
     public List<int> IdsActividades { get; set; } = new();
 }
 
@@ -41,8 +38,8 @@ public class ActualizarMembresiaDto
 public class FiltrosMembresiasDto
 {
     public int? IdSocio { get; set; }
-    public short? PeriodoAnio { get; set; }
-    public byte? PeriodoMes { get; set; }
+    public DateTime? FechaDesde { get; set; }
+    public DateTime? FechaHasta { get; set; }
     public bool? SoloImpagas { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;

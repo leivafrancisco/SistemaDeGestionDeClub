@@ -185,11 +185,11 @@ public class PagoService : IPagoService
 
         var nuevoSaldo = totalCargado - totalPagadoDespues;
 
-        var nombresMeses = new CultureInfo("es-ES").DateTimeFormat.MonthNames;
-        var nombreMes = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nombresMeses[membresia.PeriodoMes - 1]);
-
         // Generar número de comprobante: PAG-XXXXXX-AAAA
         var numeroComprobante = $"PAG-{idPago:D6}-{pago.FechaPago.Year}";
+
+        // Formato del período usando las fechas
+        var periodoMembresia = $"{membresia.FechaInicio:dd/MM/yyyy} - {membresia.FechaFin:dd/MM/yyyy}";
 
         return new ComprobantePagoDto
         {
@@ -202,7 +202,7 @@ public class PagoService : IPagoService
             NombreSocio = membresia.Socio.Persona.NombreCompleto,
 
             // Datos de la Membresía
-            PeriodoMembresia = $"{nombreMes} {membresia.PeriodoAnio}",
+            PeriodoMembresia = periodoMembresia,
             TotalMembresia = totalCargado,
             TotalPagadoAntes = totalPagadoAntes,
             MontoPago = pago.Monto,

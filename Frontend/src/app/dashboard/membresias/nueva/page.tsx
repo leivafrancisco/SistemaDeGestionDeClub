@@ -24,8 +24,8 @@ import { actividadesService, type Actividad } from '@/lib/api/actividades';
 
 const membresiaSchema = z.object({
   idSocio: z.number().min(1, 'Debe seleccionar un socio'),
-  periodoAnio: z.number().min(2020).max(2100),
-  periodoMes: z.number().min(1).max(12),
+  fechaInicio: z.string().min(1, 'Debe ingresar la fecha de inicio'),
+  fechaFin: z.string().min(1, 'Debe ingresar la fecha de fin'),
   actividadesIds: z.array(z.number()).min(1, 'Debe seleccionar al menos una actividad'),
 });
 
@@ -45,8 +45,8 @@ export default function NuevaMembresiaPage() {
   const [isLoadingSocios, setIsLoadingSocios] = useState(false);
 
   const currentDate = new Date();
-  const [periodoAnio, setPeriodoAnio] = useState(currentDate.getFullYear());
-  const [periodoMes, setPeriodoMes] = useState(currentDate.getMonth() + 1);
+  const [fechaInicio, setFechaInicio] = useState(currentDate.toISOString().split('T')[0]);
+  const [fechaFin, setFechaFin] = useState('');
 
   const {
     register,
@@ -57,8 +57,8 @@ export default function NuevaMembresiaPage() {
   } = useForm<MembresiaFormData>({
     resolver: zodResolver(membresiaSchema),
     defaultValues: {
-      periodoAnio,
-      periodoMes,
+      fechaInicio: currentDate.toISOString().split('T')[0],
+      fechaFin: '',
       actividadesIds: [],
     },
   });
@@ -135,8 +135,8 @@ export default function NuevaMembresiaPage() {
     try {
       const membresiaData: CrearMembresiaDto = {
         idSocio: data.idSocio,
-        periodoAnio: data.periodoAnio,
-        periodoMes: data.periodoMes,
+        fechaInicio: data.fechaInicio,
+        fechaFin: data.fechaFin,
         idsActividades: data.actividadesIds,
       };
 
@@ -160,11 +160,6 @@ export default function NuevaMembresiaPage() {
     return sum + (actividad?.precio || 0);
   }, 0);
 
-  const meses = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-5xl mx-auto px-4">
@@ -177,8 +172,8 @@ export default function NuevaMembresiaPage() {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Volver a Membresías
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Nueva Membresía Mensual</h1>
-          <p className="text-gray-600 mt-2">Asigna actividades a un socio para generar su cargo mensual</p>
+          <h1 className="text-3xl font-bold text-gray-900">Nueva Membresía</h1>
+          <p className="text-gray-600 mt-2">Asigna actividades a un socio para el período especificado</p>
         </div>
 
         {/* Alertas */}
@@ -331,7 +326,7 @@ export default function NuevaMembresiaPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Período de la Membresía</h2>
-                  <p className="text-sm text-gray-600">Selecciona el mes y año de la membresía</p>
+                  <p className="text-sm text-gray-600">Define el rango de fechas de la membresía</p>
                 </div>
               </div>
             </div>
@@ -339,45 +334,47 @@ export default function NuevaMembresiaPage() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="periodoMes" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="fechaInicio" className="block text-sm font-medium text-gray-700 mb-2">
                     <Calendar className="w-4 h-4 inline mr-2" />
-                    Mes *
+                    Fecha de Inicio *
                   </label>
-                  <select
-                    id="periodoMes"
-                    {...register('periodoMes', { valueAsNumber: true })}
-                    onChange={(e) => setPeriodoMes(parseInt(e.target.value))}
+                  <input
+                    type="date"
+                    id="fechaInicio"
+                    {...register('fechaInicio')}
+                    onChange={(e) => setFechaInicio(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {meses.map((mes, index) => (
-                      <option key={index + 1} value={index + 1}>
-                        {mes}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  {errors.fechaInicio && (
+                    <p className="mt-1 text-sm text-red-600">{errors.fechaInicio.message}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="periodoAnio" className="block text-sm font-medium text-gray-700 mb-2">
-                    Año *
+                  <label htmlFor="fechaFin" className="block text-sm font-medium text-gray-700 mb-2">
+                    <Calendar className="w-4 h-4 inline mr-2" />
+                    Fecha de Fin *
                   </label>
                   <input
-                    type="number"
-                    id="periodoAnio"
-                    {...register('periodoAnio', { valueAsNumber: true })}
-                    onChange={(e) => setPeriodoAnio(parseInt(e.target.value))}
+                    type="date"
+                    id="fechaFin"
+                    {...register('fechaFin')}
+                    onChange={(e) => setFechaFin(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    min="2020"
-                    max="2100"
                   />
+                  {errors.fechaFin && (
+                    <p className="mt-1 text-sm text-red-600">{errors.fechaFin.message}</p>
+                  )}
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Período seleccionado:</strong> {meses[periodoMes - 1]} de {periodoAnio}
-                </p>
-              </div>
+              {fechaInicio && fechaFin && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Período seleccionado:</strong> Desde {new Date(fechaInicio + 'T00:00:00').toLocaleDateString('es-AR')} hasta {new Date(fechaFin + 'T00:00:00').toLocaleDateString('es-AR')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -467,10 +464,12 @@ export default function NuevaMembresiaPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-blue-100">Cargo mensual automático</p>
-                  <p className="text-xs text-blue-200 mt-1">
-                    Para {meses[periodoMes - 1]} {periodoAnio}
-                  </p>
+                  <p className="text-sm text-blue-100">Cargo para el período</p>
+                  {fechaInicio && fechaFin && (
+                    <p className="text-xs text-blue-200 mt-1">
+                      {new Date(fechaInicio + 'T00:00:00').toLocaleDateString('es-AR')} - {new Date(fechaFin + 'T00:00:00').toLocaleDateString('es-AR')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -511,7 +510,8 @@ export default function NuevaMembresiaPage() {
             <div className="text-sm text-yellow-800">
               <p className="font-semibold mb-1">Importante:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>No se permite crear membresías duplicadas para el mismo período</li>
+                <li>No se permite crear membresías con fechas que se solapen para el mismo socio</li>
+                <li>La fecha de fin debe ser posterior a la fecha de inicio</li>
                 <li>El monto total se calcula automáticamente según las actividades seleccionadas</li>
                 <li>El socio debe completar el pago para activar la membresía</li>
               </ul>

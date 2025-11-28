@@ -11,9 +11,6 @@ export interface Membresia {
   idSocio: number;
   nombreSocio: string;
   numeroSocio: string;
-  periodoAnio: number;
-  periodoMes: number;
-  periodoTexto?: string;
   fechaInicio: string;
   fechaFin: string;
   totalCargado: number;
@@ -26,8 +23,8 @@ export interface Membresia {
 
 export interface CrearMembresiaDto {
   idSocio: number;
-  periodoAnio: number;
-  periodoMes: number;
+  fechaInicio: string;
+  fechaFin: string;
   idsActividades: number[];
 }
 
@@ -43,8 +40,8 @@ export interface RemoverActividadDto {
 
 export interface FiltrosMembresias {
   idSocio?: number;
-  periodoAnio?: number;
-  periodoMes?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
   soloImpagas?: boolean;
   page?: number;
   pageSize?: number;
@@ -55,8 +52,8 @@ export const membresiasService = {
     const params = new URLSearchParams();
 
     if (filtros?.idSocio) params.append('idSocio', filtros.idSocio.toString());
-    if (filtros?.periodoAnio) params.append('periodoAnio', filtros.periodoAnio.toString());
-    if (filtros?.periodoMes) params.append('periodoMes', filtros.periodoMes.toString());
+    if (filtros?.fechaDesde) params.append('fechaDesde', filtros.fechaDesde);
+    if (filtros?.fechaHasta) params.append('fechaHasta', filtros.fechaHasta);
     if (filtros?.soloImpagas !== undefined) params.append('soloImpagas', filtros.soloImpagas.toString());
     if (filtros?.page) params.append('page', filtros.page.toString());
     if (filtros?.pageSize) params.append('pageSize', filtros.pageSize.toString());

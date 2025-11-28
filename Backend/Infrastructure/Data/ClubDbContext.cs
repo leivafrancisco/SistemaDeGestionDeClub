@@ -130,21 +130,17 @@ public class ClubDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IdSocio).HasColumnName("id_socio");
-            entity.Property(e => e.PeriodoAnio).HasColumnName("periodo_anio");
-            entity.Property(e => e.PeriodoMes).HasColumnName("periodo_mes");
             entity.Property(e => e.FechaInicio).HasColumnName("fecha_inicio");
             entity.Property(e => e.FechaFin).HasColumnName("fecha_fin");
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
-            
-            entity.HasIndex(e => new { e.IdSocio, e.PeriodoAnio, e.PeriodoMes }).IsUnique();
-            
+
             entity.HasOne(e => e.Socio)
                 .WithMany(s => s.Membresias)
                 .HasForeignKey(e => e.IdSocio)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.Ignore(e => e.TotalCargado);
             entity.Ignore(e => e.TotalPagado);
             entity.Ignore(e => e.Saldo);

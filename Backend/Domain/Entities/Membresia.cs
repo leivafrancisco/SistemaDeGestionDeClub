@@ -4,8 +4,6 @@ public class Membresia
 {
     public int Id { get; set; }
     public int IdSocio { get; set; }
-    public short PeriodoAnio { get; set; }
-    public byte PeriodoMes { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -25,15 +25,18 @@ import {
   Shield,
   Database,
 } from 'lucide-react';
+import { authService } from '@/lib/api/auth';
 
 interface MenuItem {
   label: string;
   icon: React.ReactNode;
   href?: string;
+  roles?: string[]; // Roles permitidos para ver este item (undefined = todos)
   children?: {
     label: string;
     href: string;
     icon: React.ReactNode;
+    roles?: string[]; // Roles permitidos para ver este subitem
   }[];
 }
 
@@ -46,6 +49,7 @@ const menuItems: MenuItem[] = [
   {
     label: 'Socios',
     icon: <Users className="w-5 h-5" />,
+    // Recepcionistas, admins y superadmins pueden ver socios
     children: [
       {
         label: 'Listado de Socios',
@@ -56,17 +60,14 @@ const menuItems: MenuItem[] = [
         label: 'Nuevo Socio',
         href: '/dashboard/socios/nuevo',
         icon: <UserPlus className="w-4 h-4" />,
+        roles: ['admin', 'superadmin'], // Solo admin y superadmin pueden crear socios
       },
-      /* {
-        label: 'Socios Activos',
-        href: '/dashboard/socios/activos',
-        icon: <UserCheck className="w-4 h-4" />,
-      }, */
     ],
   },
   {
     label: 'Membresias',
     icon: <CreditCard className="w-5 h-5" />,
+    roles: ['admin', 'superadmin'], // Solo admin y superadmin
     children: [
       {
         label: 'Todas las Membresias',
@@ -83,27 +84,32 @@ const menuItems: MenuItem[] = [
   {
     label: 'Pagos',
     icon: <DollarSign className="w-5 h-5" />,
+    // Todos pueden ver pagos
     children: [
       {
         label: 'Historial de Pagos',
         href: '/dashboard/pagos',
         icon: <Receipt className="w-4 h-4" />,
+        roles: ['admin', 'superadmin'], // Solo admin y superadmin ven historial
       },
       {
         label: 'Registrar Pago',
         href: '/dashboard/pagos/nuevo',
         icon: <DollarSign className="w-4 h-4" />,
+        // Todos pueden registrar pagos
       },
       {
         label: 'Estadísticas',
         href: '/dashboard/pagos/estadisticas',
         icon: <Activity className="w-4 h-4" />,
+        roles: ['admin', 'superadmin'], // Solo admin y superadmin ven estadísticas
       },
     ],
   },
   {
     label: 'Asistencias',
     icon: <Calendar className="w-5 h-5" />,
+    roles: ['admin', 'superadmin'], // Solo admin y superadmin
     children: [
       {
         label: 'Registro de Asistencias',
@@ -120,6 +126,7 @@ const menuItems: MenuItem[] = [
   {
     label: 'Actividades',
     icon: <Activity className="w-5 h-5" />,
+    roles: ['admin', 'superadmin'], // Solo admin y superadmin
     children: [
       {
         label: 'Todas las Actividades',
@@ -136,21 +143,25 @@ const menuItems: MenuItem[] = [
   {
     label: 'Configuracion',
     icon: <Settings className="w-5 h-5" />,
+    roles: ['admin', 'superadmin'], // Solo admin y superadmin
     children: [
       {
         label: 'Usuarios',
         href: '/dashboard/usuarios',
         icon: <UserCog className="w-4 h-4" />,
+        roles: ['superadmin'], // Solo superadmin puede gestionar usuarios
       },
       {
         label: 'Staff',
         href: '/dashboard/configuracion/roles',
         icon: <Shield className="w-4 h-4" />,
+        roles: ['superadmin'], // Solo superadmin puede gestionar roles
       },
       {
         label: 'Sistema',
         href: '/dashboard/configuracion/sistema',
         icon: <Database className="w-4 h-4" />,
+        roles: ['superadmin'], // Solo superadmin puede ver configuración de sistema
       },
     ],
   },
@@ -164,6 +175,12 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Socios']);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const usuario = authService.getUsuario();
+    setUserRole(usuario?.rol || null);
+  }, []);
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) =>
@@ -176,6 +193,30 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const isActive = (href: string) => pathname === href;
   const isParentActive = (children: { href: string }[]) =>
     children.some((child) => pathname.startsWith(child.href));
+
+  // Filtrar items del menú según el rol del usuario
+  const canViewItem = (roles?: string[]) => {
+    if (!roles || roles.length === 0) return true; // Sin restricciones
+    if (!userRole) return false; // No hay usuario logueado
+    return roles.includes(userRole);
+  };
+
+  const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
+    return items
+      .filter(item => canViewItem(item.roles))
+      .map(item => {
+        if (item.children) {
+          const filteredChildren = item.children.filter(child => canViewItem(child.roles));
+          // Si no quedan hijos visibles, no mostrar el padre
+          if (filteredChildren.length === 0) return null;
+          return { ...item, children: filteredChildren };
+        }
+        return item;
+      })
+      .filter(Boolean) as MenuItem[];
+  };
+
+  const visibleMenuItems = filterMenuItems(menuItems);
 
   return (
     <aside
@@ -195,7 +236,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <nav className="mt-4 px-2">
         <ul className="space-y-1">
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <li key={item.label}>
               {item.href ? (
                 <Link

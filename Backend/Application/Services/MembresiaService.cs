@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Domain.Entities;
 using SistemaDeGestionDeClub.Infrastructure.Data;
-using System.Globalization;
 
 namespace SistemaDeGestionDeClub.Application.Services;
 
@@ -46,19 +45,18 @@ public class MembresiaService : IMembresiaService
             query = query.Where(m => m.IdSocio == filtros.IdSocio.Value);
         }
 
-        if (filtros.PeriodoAnio.HasValue)
+        if (filtros.FechaDesde.HasValue)
         {
-            query = query.Where(m => m.PeriodoAnio == filtros.PeriodoAnio.Value);
+            query = query.Where(m => m.FechaInicio >= filtros.FechaDesde.Value);
         }
 
-        if (filtros.PeriodoMes.HasValue)
+        if (filtros.FechaHasta.HasValue)
         {
-            query = query.Where(m => m.PeriodoMes == filtros.PeriodoMes.Value);
+            query = query.Where(m => m.FechaFin <= filtros.FechaHasta.Value);
         }
 
         var membresias = await query
-            .OrderByDescending(m => m.PeriodoAnio)
-            .ThenByDescending(m => m.PeriodoMes)
+            .OrderByDescending(m => m.FechaInicio)
             .Skip((filtros.Page - 1) * filtros.PageSize)
             .Take(filtros.PageSize)
             .ToListAsync();
@@ -100,16 +98,22 @@ public class MembresiaService : IMembresiaService
             throw new InvalidOperationException("Socio no encontrado");
         }
 
-        // Validar que no exista ya una membresía para este socio en este periodo
+        // Validar que la fecha de fin sea posterior a la fecha de inicio
+        if (dto.FechaFin <= dto.FechaInicio)
+        {
+            throw new InvalidOperationException("La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+
+        // Validar que no exista ya una membresía para este socio que se solape con las fechas
         var existeMembresia = await _context.Membresias.AnyAsync(m =>
             m.IdSocio == dto.IdSocio &&
-            m.PeriodoAnio == dto.PeriodoAnio &&
-            m.PeriodoMes == dto.PeriodoMes &&
-            m.FechaEliminacion == null);
+            m.FechaEliminacion == null &&
+            ((m.FechaInicio <= dto.FechaFin && m.FechaFin >= dto.FechaInicio) ||
+             (dto.FechaInicio <= m.FechaFin && dto.FechaFin >= m.FechaInicio)));
 
         if (existeMembresia)
         {
-            throw new InvalidOperationException($"Ya existe una membresía para este socio en el periodo {dto.PeriodoMes}/{dto.PeriodoAnio}");
+            throw new InvalidOperationException($"Ya existe una membresía para este socio que se solapa con las fechas especificadas");
         }
 
         // Validar que las actividades existan
@@ -125,18 +129,12 @@ public class MembresiaService : IMembresiaService
             }
         }
 
-        // Calcular fechas de inicio y fin del periodo
-        var fechaInicio = new DateTime(dto.PeriodoAnio, dto.PeriodoMes, 1);
-        var fechaFin = fechaInicio.AddMonths(1).AddDays(-1);
-
         // Crear membresía
         var membresia = new Membresia
         {
             IdSocio = dto.IdSocio,
-            PeriodoAnio = dto.PeriodoAnio,
-            PeriodoMes = dto.PeriodoMes,
-            FechaInicio = fechaInicio,
-            FechaFin = fechaFin,
+            FechaInicio = dto.FechaInicio,
+            FechaFin = dto.FechaFin,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -362,18 +360,12 @@ public class MembresiaService : IMembresiaService
 
     private MembresiaDto MapearADto(Membresia membresia)
     {
-        var nombresMeses = new CultureInfo("es-ES").DateTimeFormat.MonthNames;
-        var nombreMes = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nombresMeses[membresia.PeriodoMes - 1]);
-
         return new MembresiaDto
         {
             Id = membresia.Id,
             IdSocio = membresia.IdSocio,
             NumeroSocio = membresia.Socio.NumeroSocio,
             NombreSocio = membresia.Socio.Persona.NombreCompleto,
-            PeriodoAnio = membresia.PeriodoAnio,
-            PeriodoMes = membresia.PeriodoMes,
-            PeriodoTexto = $"{nombreMes} {membresia.PeriodoAnio}",
             FechaInicio = membresia.FechaInicio,
             FechaFin = membresia.FechaFin,
             TotalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento),
