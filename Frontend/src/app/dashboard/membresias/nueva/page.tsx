@@ -155,28 +155,7 @@ export default function NuevaMembresiaPage() {
     }
   };
 
-  // Calcular diferencia de meses entre fecha inicio y fecha fin
-  const calcularDiferenciaMeses = (inicio: string, fin: string): number => {
-    if (!inicio || !fin) return 0;
 
-    const fechaIni = new Date(inicio);
-    const fechaFn = new Date(fin);
-
-    const diffTime = fechaFn.getTime() - fechaIni.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    const diffMonths = Math.ceil(diffDays / 30); // Aproximación: 30 días por mes
-
-    return diffMonths > 0 ? diffMonths : 0;
-  };
-
-  // Calcular total: (suma de precios de actividades) * (diferencia de meses)
-  const precioPorMes = selectedActividades.reduce((sum, actividadId) => {
-    const actividad = actividades.find((a) => a.id === actividadId);
-    return sum + (actividad?.precio || 0);
-  }, 0);
-
-  const mesesDiferencia = calcularDiferenciaMeses(fechaInicio, fechaFin);
-  const totalMonto = precioPorMes * mesesDiferencia;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
