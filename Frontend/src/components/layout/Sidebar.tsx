@@ -109,24 +109,26 @@ const menuItems: MenuItem[] = [
   {
     label: 'Asistencias',
     icon: <Calendar className="w-5 h-5" />,
-    roles: ['admin', 'superadmin'], // Solo admin y superadmin
+    roles: ['superadmin', 'admin', 'recepcionista'], // Admin, superadmin y recepcionista
     children: [
       {
         label: 'Registro de Asistencias',
         href: '/dashboard/asistencias',
         icon: <CalendarDays className="w-4 h-4" />,
+        roles: ['superadmin', 'admin'], // Solo admin y superadmin ven historial completo
       },
       {
         label: 'Marcar Asistencia',
         href: '/dashboard/asistencias/marcar',
         icon: <CalendarCheck className="w-4 h-4" />,
+        // Admin, superadmin y recepcionista pueden marcar asistencia
       },
     ],
   },
   {
     label: 'Actividades',
     icon: <Activity className="w-5 h-5" />,
-    roles: ['admin', 'superadmin'], // Solo admin y superadmin
+    roles: ['superadmin'], // Solo superadmin puede gestionar actividades
     children: [
       {
         label: 'Todas las Actividades',
@@ -179,7 +181,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   useEffect(() => {
     const usuario = authService.getUsuario();
-    setUserRole(usuario?.rol || null);
+    // Normalizar a minúsculas para evitar problemas de comparación
+    setUserRole(usuario?.rol?.toLowerCase() || null);
   }, []);
 
   const toggleExpand = (label: string) => {

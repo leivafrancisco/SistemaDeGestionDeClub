@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { sociosService, type Socio } from '@/lib/api/socios';
+import { authService } from '@/lib/api/auth';
 import {
   Users,
   Search,
@@ -28,6 +29,13 @@ export default function SociosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'todos' | 'activos' | 'inactivos'>('todos');
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const usuario = authService.getUsuario();
+    // Normalizar a minúsculas para evitar problemas de comparación
+    setUserRole(usuario?.rol?.toLowerCase() || null);
+  }, []);
 
   useEffect(() => {
     cargarSocios();
@@ -77,10 +85,13 @@ export default function SociosPage() {
           <h1 className="text-2xl font-bold text-gray-900">Socios</h1>
           <p className="text-gray-600">Gestiona los socios del club</p>
         </div>
-        <Link href="/dashboard/socios/nuevo" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus className="w-4 h-4" />
-          Nuevo Socio
-        </Link>
+        {/* Solo admin y superadmin pueden crear socios */}
+        {userRole && ['admin', 'superadmin'].includes(userRole) && (
+          <Link href="/dashboard/socios/nuevo" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus className="w-4 h-4" />
+            Nuevo Socio
+          </Link>
+        )}
       </div>
 
       {/* Filters and Search */}
@@ -253,14 +264,17 @@ export default function SociosPage() {
                         {openMenuId === socio.id && (
                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                             <div className="py-1">
-                              <Link
-                                href={`/dashboard/socios/${socio.id}/editar`}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                onClick={() => setOpenMenuId(null)}
-                              >
-                                <Edit className="w-4 h-4" />
-                                Editar
-                              </Link>
+                              {/* Solo admin y superadmin pueden editar */}
+                              {userRole && ['admin', 'superadmin'].includes(userRole) && (
+                                <Link
+                                  href={`/dashboard/socios/${socio.id}/editar`}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                  onClick={() => setOpenMenuId(null)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Editar
+                                </Link>
+                              )}
                               <button
                                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={() => setOpenMenuId(null)}
@@ -268,13 +282,16 @@ export default function SociosPage() {
                                 <Eye className="w-4 h-4" />
                                 Ver Detalle
                               </button>
-                              <button
-                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                onClick={() => setOpenMenuId(null)}
-                              >
-                                <UserX className="w-4 h-4" />
-                                Desactivar
-                              </button>
+                              {/* Solo admin y superadmin pueden desactivar */}
+                              {userRole && ['admin', 'superadmin'].includes(userRole) && (
+                                <button
+                                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                  onClick={() => setOpenMenuId(null)}
+                                >
+                                  <UserX className="w-4 h-4" />
+                                  Desactivar
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

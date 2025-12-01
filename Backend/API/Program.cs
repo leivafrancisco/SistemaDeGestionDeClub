@@ -21,6 +21,7 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IActividadService, ActividadService>();
 builder.Services.AddScoped<IMembresiaService, MembresiaService>();
 builder.Services.AddScoped<IPagoService, PagoService>();
+builder.Services.AddScoped<IAsistenciaService, AsistenciaService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "TuClaveSecretaSuperSeguraDeAlMenos32Caracteres!";

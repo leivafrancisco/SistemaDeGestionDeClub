@@ -43,8 +43,8 @@ public class AuthService : IAuthService
             return null;
         }
         
-        // Validar contraseña usando BCrypt
-        if (!VerificarContrasena(dto.Password, usuario.ContrasenaHash))
+        // Validar contraseña - comparación directa (⚠️ INSEGURO)
+        if (dto.Password != usuario.ContrasenaHash)
         {
             return null;
         }
@@ -117,8 +117,5 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
     
-    private bool VerificarContrasena(string contrasena, string hash)
-    {
-        return BCrypt.Net.BCrypt.Verify(contrasena, hash);
-    }
+    // Método removido - ahora se usa comparación directa de strings (⚠️ INSEGURO)
 }
