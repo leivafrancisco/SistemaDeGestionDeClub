@@ -35,11 +35,18 @@ const usuarioSchema = z.object({
     .max(100, 'El email no puede exceder 100 caracteres'),
   dni: z
     .string()
-    .regex(/^\d*$/, 'El DNI solo puede contener números')
-    .max(8, 'El DNI no puede exceder 8 dígitos')
-    .optional()
-    .or(z.literal('')),
-  fechaNacimiento: z.string().optional(),
+    .min(1, 'El DNI es obligatorio')
+    .regex(/^\d+$/, 'El DNI solo puede contener números')
+    .min(7, 'El DNI debe tener al menos 7 dígitos')
+    .max(8, 'El DNI no puede exceder 8 dígitos'),
+  fechaNacimiento: z
+    .string()
+    .min(1, 'La fecha de nacimiento es obligatoria')
+    .refine((date) => {
+      const birthDate = new Date(date);
+      const today = new Date();
+      return birthDate < today;
+    }, 'La fecha de nacimiento debe ser anterior a hoy'),
   rol: z.enum(['admin', 'recepcionista'], {
     errorMap: () => ({ message: 'Debe seleccionar un rol válido' }),
   }),
@@ -74,8 +81,8 @@ export default function NuevoUsuarioPage() {
         nombre: data.nombre.trim(),
         apellido: data.apellido.trim(),
         email: data.email.trim().toLowerCase(),
-        dni: data.dni?.trim() || undefined,
-        fechaNacimiento: data.fechaNacimiento ? new Date(data.fechaNacimiento).toISOString() : undefined,
+        dni: data.dni.trim(),
+        fechaNacimiento: new Date(data.fechaNacimiento).toISOString(),
         rol: data.rol,
       };
 
@@ -244,7 +251,7 @@ export default function NuevoUsuarioPage() {
 
                 <div>
                   <label htmlFor="dni" className="block text-sm font-medium text-gray-700">
-                    DNI
+                    DNI *
                   </label>
                   <input
                     type="text"
@@ -266,7 +273,7 @@ export default function NuevoUsuarioPage() {
 
                 <div className="md:col-span-2">
                   <label htmlFor="fechaNacimiento" className="block text-sm font-medium text-gray-700">
-                    Fecha de Nacimiento
+                    Fecha de Nacimiento *
                   </label>
                   <input
                     type="date"
@@ -275,6 +282,9 @@ export default function NuevoUsuarioPage() {
                     className="mt-1 block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm border px-3 py-2"
                     max={new Date().toISOString().split('T')[0]}
                   />
+                  {errors.fechaNacimiento && (
+                    <p className="mt-1 text-sm text-red-600">{errors.fechaNacimiento.message}</p>
+                  )}
                 </div>
               </div>
             </div>

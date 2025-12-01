@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Domain.Entities;
 using SistemaDeGestionDeClub.Infrastructure.Data;
+using BCrypt.Net;
 
 namespace SistemaDeGestionDeClub.Application.Services;
 
@@ -106,7 +107,7 @@ public class UsuarioService : IUsuarioService
             IdPersona = persona.Id,
             IdRol = rol.Id,
             NombreUsuario = dto.NombreUsuario,
-            ContrasenaHash = dto.Password, // En producción usar BCrypt
+            ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             EstaActivo = true,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now

@@ -44,10 +44,18 @@ const usuarioSchema = z.object({
     .toLowerCase(),
   dni: z
     .string()
-    .regex(/^\d{7,8}$/, 'El DNI debe tener 7 u 8 dígitos')
-    .optional()
-    .or(z.literal('')),
-  fechaNacimiento: z.string().optional().or(z.literal('')),
+    .min(1, 'El DNI es obligatorio')
+    .regex(/^\d+$/, 'El DNI solo puede contener números')
+    .min(7, 'El DNI debe tener al menos 7 dígitos')
+    .max(8, 'El DNI no puede exceder 8 dígitos'),
+  fechaNacimiento: z
+    .string()
+    .min(1, 'La fecha de nacimiento es obligatoria')
+    .refine((date) => {
+      const birthDate = new Date(date);
+      const today = new Date();
+      return birthDate < today;
+    }, 'La fecha de nacimiento debe ser anterior a hoy'),
 
   // Datos de usuario
   nombreUsuario: z

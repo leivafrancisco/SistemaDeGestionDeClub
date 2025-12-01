@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Domain.Entities;
 using SistemaDeGestionDeClub.Infrastructure.Data;
+using BCrypt.Net;
 
 namespace SistemaDeGestionDeClub.Application.Services;
 
@@ -42,7 +43,7 @@ public class AuthService : IAuthService
             return null;
         }
         
-        // Validar contraseña (en producción usar BCrypt)
+        // Validar contraseña usando BCrypt
         if (!VerificarContrasena(dto.Password, usuario.ContrasenaHash))
         {
             return null;
@@ -118,10 +119,6 @@ public class AuthService : IAuthService
     
     private bool VerificarContrasena(string contrasena, string hash)
     {
-        // En producción, usar BCrypt.Net-Next:
-        // return BCrypt.Net.BCrypt.Verify(contrasena, hash);
-        
-        // Por ahora, comparación simple (SOLO PARA DESARROLLO)
-        return contrasena == hash;
+        return BCrypt.Net.BCrypt.Verify(contrasena, hash);
     }
 }
