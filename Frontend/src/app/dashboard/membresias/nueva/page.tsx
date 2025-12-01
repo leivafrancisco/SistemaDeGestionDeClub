@@ -155,10 +155,28 @@ export default function NuevaMembresiaPage() {
     }
   };
 
-  const totalMonto = selectedActividades.reduce((sum, actividadId) => {
+  // Calcular diferencia de meses entre fecha inicio y fecha fin
+  const calcularDiferenciaMeses = (inicio: string, fin: string): number => {
+    if (!inicio || !fin) return 0;
+
+    const fechaIni = new Date(inicio);
+    const fechaFn = new Date(fin);
+
+    const diffTime = fechaFn.getTime() - fechaIni.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    const diffMonths = Math.ceil(diffDays / 30); // Aproximación: 30 días por mes
+
+    return diffMonths > 0 ? diffMonths : 0;
+  };
+
+  // Calcular total: (suma de precios de actividades) * (diferencia de meses)
+  const precioPorMes = selectedActividades.reduce((sum, actividadId) => {
     const actividad = actividades.find((a) => a.id === actividadId);
     return sum + (actividad?.precio || 0);
   }, 0);
+
+  const mesesDiferencia = calcularDiferenciaMeses(fechaInicio, fechaFin);
+  const totalMonto = precioPorMes * mesesDiferencia;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -450,27 +468,53 @@ export default function NuevaMembresiaPage() {
           {/* Resumen y Total */}
           {selectedActividades.length > 0 && (
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-100 mb-1">Total de la Membresía</p>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-8 h-8" />
-                    <p className="text-4xl font-bold">
-                      ${totalMonto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              <div className="space-y-4">
+                {/* Desglose del cálculo */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-blue-500">
+                  <div>
+                    <p className="text-xs text-blue-200 mb-1">Precio por mes</p>
+                    <p className="text-2xl font-bold">${precioPorMes.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xs text-blue-100 mt-1">
+                      {selectedActividades.length} {selectedActividades.length === 1 ? 'actividad' : 'actividades'}
                     </p>
                   </div>
-                  <p className="text-sm text-blue-100 mt-2">
-                    {selectedActividades.length} {selectedActividades.length === 1 ? 'actividad seleccionada' : 'actividades seleccionadas'}
-                  </p>
+                  <div>
+                    <p className="text-xs text-blue-200 mb-1">Cantidad de meses</p>
+                    <p className="text-2xl font-bold">× {mesesDiferencia}</p>
+                    {fechaInicio && fechaFin && (
+                      <p className="text-xs text-blue-100 mt-1">
+                        {new Date(fechaInicio + 'T00:00:00').toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })} - {new Date(fechaFin + 'T00:00:00').toLocaleDateString('es-AR', { month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-200 mb-1">Total de la Membresía</p>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-6 h-6" />
+                      <p className="text-3xl font-bold">
+                        ${totalMonto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-blue-100">Cargo para el período</p>
-                  {fechaInicio && fechaFin && (
-                    <p className="text-xs text-blue-200 mt-1">
-                      {new Date(fechaInicio + 'T00:00:00').toLocaleDateString('es-AR')} - {new Date(fechaFin + 'T00:00:00').toLocaleDateString('es-AR')}
+
+                {/* Resumen textual */}
+                {mesesDiferencia > 0 && (
+                  <div className="text-center">
+                    <p className="text-sm text-blue-100">
+                      Cálculo: ${precioPorMes.toFixed(2)} × {mesesDiferencia} {mesesDiferencia === 1 ? 'mes' : 'meses'} = ${totalMonto.toFixed(2)}
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Advertencia si no hay período seleccionado */}
+                {mesesDiferencia === 0 && fechaInicio && fechaFin && (
+                  <div className="bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3 text-center">
+                    <p className="text-sm text-yellow-100">
+                      ⚠️ La diferencia de meses es 0. Verifica las fechas de inicio y fin.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
