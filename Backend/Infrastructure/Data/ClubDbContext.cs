@@ -115,7 +115,7 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
             entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(500);
-            entity.Property(e => e.Precio).HasColumnName("precio").HasColumnType("decimal(10, 2)").IsRequired();
+            entity.Property(e => e.Precio).HasColumnName("precio_actual").HasColumnType("decimal(10, 2)").IsRequired();
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
@@ -153,7 +153,7 @@ public class ClubDbContext : DbContext
             entity.HasKey(e => new { e.IdMembresia, e.IdActividad });
             entity.Property(e => e.IdMembresia).HasColumnName("id_membresia");
             entity.Property(e => e.IdActividad).HasColumnName("id_actividad");
-            entity.Property(e => e.PrecioAlMomento).HasColumnName("precio_al_momento").HasColumnType("decimal(10, 2)").IsRequired();
+            entity.Property(e => e.PrecioAlMomento).HasColumnName("precio_mensual_congelado").HasColumnType("decimal(10, 2)").IsRequired();
 
             entity.HasOne(e => e.Membresia)
                 .WithMany(m => m.MembresiaActividades)
