@@ -129,12 +129,20 @@ public class MembresiaService : IMembresiaService
             }
         }
 
+        // Validar que el costo total sea positivo
+        if (dto.CostoTotal <= 0)
+        {
+            throw new InvalidOperationException("El costo total debe ser mayor a cero");
+        }
+
         // Crear membresía
         var membresia = new Membresia
         {
             IdSocio = dto.IdSocio,
             FechaInicio = dto.FechaInicio,
             FechaFin = dto.FechaFin,
+            CostoTotal = dto.CostoTotal,
+            EstadoPago = "PENDIENTE",
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -368,6 +376,8 @@ public class MembresiaService : IMembresiaService
             NombreSocio = membresia.Socio.Persona.NombreCompleto,
             FechaInicio = membresia.FechaInicio,
             FechaFin = membresia.FechaFin,
+            CostoTotal = membresia.CostoTotal,
+            EstadoPago = membresia.EstadoPago,
             TotalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento),
             TotalPagado = membresia.Pagos.Where(p => p.FechaEliminacion == null).Sum(p => p.Monto),
             Saldo = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento) -

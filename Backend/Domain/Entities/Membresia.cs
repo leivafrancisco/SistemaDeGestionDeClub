@@ -6,7 +6,9 @@ public class Membresia
     public int IdSocio { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
-    
+    public decimal CostoTotal { get; set; }
+    public string EstadoPago { get; set; } = "PENDIENTE";
+
     // Auditoría
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }

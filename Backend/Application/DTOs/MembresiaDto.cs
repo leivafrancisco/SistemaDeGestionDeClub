@@ -8,6 +8,8 @@ public class MembresiaDto
     public string NombreSocio { get; set; } = string.Empty;
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
+    public decimal CostoTotal { get; set; }
+    public string EstadoPago { get; set; } = string.Empty;
     public decimal TotalCargado { get; set; }
     public decimal TotalPagado { get; set; }
     public decimal Saldo { get; set; }
@@ -27,6 +29,7 @@ public class CrearMembresiaDto
     public int IdSocio { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
+    public decimal CostoTotal { get; set; }
     public List<int> IdsActividades { get; set; } = new();
 }
 
