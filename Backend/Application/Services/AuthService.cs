@@ -43,8 +43,8 @@ public class AuthService : IAuthService
             return null;
         }
         
-        // Validar contraseña - comparación directa (⚠️ INSEGURO)
-        if (dto.Password != usuario.ContrasenaHash)
+        // Validar contraseña con BCrypt
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.ContrasenaHash))
         {
             return null;
         }

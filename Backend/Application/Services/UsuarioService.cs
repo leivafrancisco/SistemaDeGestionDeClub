@@ -107,7 +107,7 @@ public class UsuarioService : IUsuarioService
             IdPersona = persona.Id,
             IdRol = rol.Id,
             NombreUsuario = dto.NombreUsuario,
-            ContrasenaHash = dto.Password, // ⚠️ CONTRASEÑA EN TEXTO PLANO - INSEGURO
+            ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             EstaActivo = true,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
