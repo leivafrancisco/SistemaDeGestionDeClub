@@ -7,7 +7,7 @@ public class Membresia
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public decimal CostoTotal { get; set; }
-    public string EstadoPago { get; set; } = "PENDIENTE";
+    public string Estado { get; set; } = "AL DIA"; // AL DIA o VENCIDA
 
     // Auditoría
     public DateTime FechaCreacion { get; set; }

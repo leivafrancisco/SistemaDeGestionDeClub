@@ -140,6 +140,7 @@ public class PagoService : IPagoService
             IdUsuarioProcesa = idUsuario,
             Monto = dto.Monto,
             FechaPago = dto.FechaPago ?? DateTime.Now,
+            EstadoPago = "COMPLETADO",
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -376,6 +377,7 @@ public class PagoService : IPagoService
             NombreUsuarioProcesa = pago.UsuarioProcesa?.Persona?.NombreCompleto,
             Monto = pago.Monto,
             FechaPago = pago.FechaPago,
+            EstadoPago = pago.EstadoPago,
             FechaCreacion = pago.FechaCreacion
         };
     }

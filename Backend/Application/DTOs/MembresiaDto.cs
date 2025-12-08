@@ -9,7 +9,7 @@ public class MembresiaDto
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public decimal CostoTotal { get; set; }
-    public string EstadoPago { get; set; } = string.Empty;
+    public string Estado { get; set; } = string.Empty; // AL DIA o VENCIDA
     public decimal TotalCargado { get; set; }
     public decimal TotalPagado { get; set; }
     public decimal Saldo { get; set; }
