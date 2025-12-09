@@ -60,17 +60,34 @@ public class AsistenciasController : ControllerBase
     }
 
     /// <summary>
-    /// Obtener historial de asistencias
+    /// Obtener historial de asistencias con filtros opcionales
     /// </summary>
+    /// <param name="fecha">Filtrar por fecha específica (formato: YYYY-MM-DD)</param>
+    /// <param name="idSocio">Filtrar por ID de socio</param>
+    /// <returns>Lista de asistencias ordenadas por fecha descendente</returns>
     [HttpGet]
-    [Authorize(Roles = "superadmin,admin")]
+    [Authorize(Roles = "superadmin,admin,recepcionista")]
     public async Task<ActionResult<List<AsistenciaDto>>> ObtenerAsistencias(
-        [FromQuery] DateTime? fecha = null,
+        [FromQuery] string? fecha = null,
         [FromQuery] int? idSocio = null)
     {
         try
         {
-            var asistencias = await _asistenciaService.ObtenerAsistenciasAsync(fecha, idSocio);
+            // Validar y parsear la fecha si se proporciona
+            DateTime? fechaParsed = null;
+            if (!string.IsNullOrEmpty(fecha))
+            {
+                if (!DateTime.TryParseExact(fecha, "yyyy-MM-dd", 
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, 
+                    out var fechaResult))
+                {
+                    return BadRequest(new { message = "Formato de fecha inválido. Use el formato YYYY-MM-DD (ej: 2025-12-09)" });
+                }
+                fechaParsed = fechaResult;
+            }
+
+            var asistencias = await _asistenciaService.ObtenerAsistenciasAsync(fechaParsed, idSocio);
             return Ok(asistencias);
         }
         catch (Exception ex)
