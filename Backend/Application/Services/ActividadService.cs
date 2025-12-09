@@ -27,13 +27,15 @@ public class ActividadService : IActividadService
     {
         var actividades = await _context.Actividades
             .Where(a => a.FechaEliminacion == null)
-            .OrderBy(a => a.Nombre)
+            .OrderByDescending(a => a.EsCuotaBase) // Cuota base primero
+            .ThenBy(a => a.Nombre) // Luego ordenar por nombre
             .Select(a => new ActividadDto
             {
                 Id = a.Id,
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
+                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .ToListAsync();
@@ -51,6 +53,7 @@ public class ActividadService : IActividadService
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
+                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .FirstOrDefaultAsync();
@@ -99,6 +102,7 @@ public class ActividadService : IActividadService
             Nombre = dto.Nombre.Trim(),
             Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim(),
             Precio = dto.Precio,
+            EsCuotaBase = dto.EsCuotaBase,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -112,6 +116,7 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
+            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }
@@ -163,6 +168,7 @@ public class ActividadService : IActividadService
         actividad.Nombre = dto.Nombre.Trim();
         actividad.Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim();
         actividad.Precio = dto.Precio;
+        actividad.EsCuotaBase = dto.EsCuotaBase;
         actividad.FechaActualizacion = DateTime.Now;
 
         await _context.SaveChangesAsync();
@@ -173,6 +179,7 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
+            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }

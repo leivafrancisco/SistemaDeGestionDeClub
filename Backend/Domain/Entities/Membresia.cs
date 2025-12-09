@@ -7,7 +7,7 @@ public class Membresia
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public decimal CostoTotal { get; set; }
-    public string Estado { get; set; } = "AL DIA"; // AL DIA o VENCIDA
+    public string Estado { get; set; } = MembresiaEstado.Activa; // Estado de la membresía
 
     // Auditoría
     public DateTime FechaCreacion { get; set; }
@@ -18,9 +18,9 @@ public class Membresia
     public Socio Socio { get; set; } = null!;
     public ICollection<MembresiaActividad> MembresiaActividades { get; set; } = new List<MembresiaActividad>();
     public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
-    
-    // Propiedades calculadas
-    public decimal TotalCargado => MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
-    public decimal TotalPagado => Pagos.Sum(p => p.Monto);
+
+    // Propiedades calculadas (no mapeadas a BD)
+    public decimal TotalCargado => MembresiaActividades?.Sum(ma => ma.PrecioAlMomento) ?? 0;
+    public decimal TotalPagado => Pagos?.Where(p => p.FechaEliminacion == null).Sum(p => p.Monto) ?? 0;
     public decimal Saldo => TotalCargado - TotalPagado;
 }

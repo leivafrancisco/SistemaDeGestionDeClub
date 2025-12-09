@@ -101,13 +101,22 @@ public class UsuarioService : IUsuarioService
         _context.Personas.Add(persona);
         await _context.SaveChangesAsync();
 
+        // DEBUG: Ver qué contraseña llega
+        Console.WriteLine($"=== DEBUG CREAR USUARIO ===");
+        Console.WriteLine($"Password recibido: '{dto.Password}'");
+        Console.WriteLine($"Password length: {dto.Password?.Length ?? 0}");
+        
+        var hashGenerado = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        Console.WriteLine($"Hash generado: {hashGenerado}");
+        Console.WriteLine($"===========================");
+
         // Crear el usuario
         var usuario = new Usuario
         {
             IdPersona = persona.Id,
             IdRol = rol.Id,
             NombreUsuario = dto.NombreUsuario,
-            ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            ContrasenaHash = hashGenerado,
             EstaActivo = true,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now

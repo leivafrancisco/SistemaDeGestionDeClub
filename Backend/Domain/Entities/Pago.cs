@@ -7,9 +7,7 @@ public class Pago
     public int IdMetodoPago { get; set; }
     public int? IdUsuarioProcesa { get; set; }
     public decimal Monto { get; set; }
-    public DateTime FechaPago { get; set; }
-    public string EstadoPago { get; set; } = "COMPLETADO"; // COMPLETADO, PENDIENTE, ANULADO, etc.
-    
+    public DateTime FechaPago { get; set; }    
     // Auditoría
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }

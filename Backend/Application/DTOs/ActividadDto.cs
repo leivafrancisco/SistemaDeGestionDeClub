@@ -6,6 +6,7 @@ public class ActividadDto
     public string Nombre { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
     public decimal Precio { get; set; }
+    public bool EsCuotaBase { get; set; }
     public DateTime FechaCreacion { get; set; }
 }
 
@@ -14,6 +15,7 @@ public class CrearActividadDto
     public string Nombre { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
     public decimal Precio { get; set; }
+    public bool EsCuotaBase { get; set; }
 }
 
 public class ActualizarActividadDto
@@ -21,4 +23,5 @@ public class ActualizarActividadDto
     public string Nombre { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
     public decimal Precio { get; set; }
+    public bool EsCuotaBase { get; set; }
 }

@@ -14,7 +14,6 @@ public class PagoDto
     public string? NombreUsuarioProcesa { get; set; }
     public decimal Monto { get; set; }
     public DateTime FechaPago { get; set; }
-    public string EstadoPago { get; set; } = string.Empty; // COMPLETADO, PENDIENTE, ANULADO
     public DateTime FechaCreacion { get; set; }
 }
 

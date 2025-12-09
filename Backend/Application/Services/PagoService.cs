@@ -21,10 +21,12 @@ public interface IPagoService
 public class PagoService : IPagoService
 {
     private readonly ClubDbContext _context;
+    private readonly IMembresiaService _membresiaService;
 
-    public PagoService(ClubDbContext context)
+    public PagoService(ClubDbContext context, IMembresiaService membresiaService)
     {
         _context = context;
+        _membresiaService = membresiaService;
     }
 
     public async Task<List<PagoDto>> ObtenerTodosAsync(FiltrosPagosDto? filtros = null)
@@ -140,7 +142,6 @@ public class PagoService : IPagoService
             IdUsuarioProcesa = idUsuario,
             Monto = dto.Monto,
             FechaPago = dto.FechaPago ?? DateTime.Now,
-            EstadoPago = "COMPLETADO",
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -148,8 +149,16 @@ public class PagoService : IPagoService
         _context.Pagos.Add(pago);
         await _context.SaveChangesAsync();
 
+        Console.WriteLine($"[DEBUG PagoService] Pago creado con ID: {pago.Id}, Monto: {pago.Monto}");
+
+        // Actualizar el estado de la membresía después de registrar el pago
+        await _membresiaService.ActualizarEstadoDespuesDePagoAsync(dto.IdMembresia);
+
         // Generar y retornar el comprobante
-        return await GenerarComprobanteAsync(pago.Id);
+        var comprobante = await GenerarComprobanteAsync(pago.Id);
+        Console.WriteLine($"[DEBUG PagoService] Comprobante generado - IdPago: {comprobante.IdPago}, Número: {comprobante.NumeroComprobante}");
+
+        return comprobante;
     }
 
     public async Task<ComprobantePagoDto> GenerarComprobanteAsync(int idPago)
@@ -377,7 +386,6 @@ public class PagoService : IPagoService
             NombreUsuarioProcesa = pago.UsuarioProcesa?.Persona?.NombreCompleto,
             Monto = pago.Monto,
             FechaPago = pago.FechaPago,
-            EstadoPago = pago.EstadoPago,
             FechaCreacion = pago.FechaCreacion
         };
     }

@@ -26,6 +26,8 @@ public class MembresiasController : ControllerBase
         [FromQuery] DateTime? fechaDesde = null,
         [FromQuery] DateTime? fechaHasta = null,
         [FromQuery] bool? soloImpagas = null,
+        [FromQuery] string? search = null,
+        [FromQuery] string? estadoVigencia = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -37,6 +39,8 @@ public class MembresiasController : ControllerBase
                 FechaDesde = fechaDesde,
                 FechaHasta = fechaHasta,
                 SoloImpagas = soloImpagas,
+                Search = search,
+                EstadoVigencia = estadoVigencia,
                 Page = page,
                 PageSize = pageSize
             };
@@ -96,7 +100,10 @@ public class MembresiasController : ControllerBase
     }
 
     /// <summary>
-    /// Actualizar una membresía existente (solo actividades)
+    /// Actualizar una membresía existente (fechas y/o actividades)
+    /// Permite editar fechas de inicio/fin y actividades asociadas.
+    /// Los pagos existentes se mantienen intactos y el saldo se recalcula automáticamente.
+    /// El saldo puede ser negativo si hay saldo a favor del socio.
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "superadmin,admin")]

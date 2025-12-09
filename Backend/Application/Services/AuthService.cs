@@ -31,6 +31,28 @@ public class AuthService : IAuthService
     
     public async Task<LoginResponseDto?> LoginAsync(LoginDto dto)
     {
+        // Debug: Primero buscar sin filtros para ver qué hay
+        var usuarioDebug = await _context.Usuarios
+            .Include(u => u.Persona)
+            .Include(u => u.Rol)
+            .FirstOrDefaultAsync(u => u.NombreUsuario == dto.NombreUsuario);
+        
+        if (usuarioDebug != null)
+        {
+            Console.WriteLine($"=== DEBUG LOGIN ===");
+            Console.WriteLine($"Usuario encontrado: {usuarioDebug.NombreUsuario}");
+            Console.WriteLine($"EstaActivo: {usuarioDebug.EstaActivo}");
+            Console.WriteLine($"FechaEliminacion: {usuarioDebug.FechaEliminacion}");
+            Console.WriteLine($"Rol: {usuarioDebug.Rol?.Nombre ?? "NULL"}");
+            Console.WriteLine($"IdRol: {usuarioDebug.IdRol}");
+            Console.WriteLine($"Persona: {usuarioDebug.Persona?.NombreCompleto ?? "NULL"}");
+            Console.WriteLine($"===================");
+        }
+        else
+        {
+            Console.WriteLine($"=== DEBUG: Usuario '{dto.NombreUsuario}' NO encontrado en BD ===");
+        }
+        
         var usuario = await _context.Usuarios
             .Include(u => u.Persona)
             .Include(u => u.Rol)
@@ -41,12 +63,14 @@ public class AuthService : IAuthService
         
         if (usuario == null)
         {
+            Console.WriteLine("=== DEBUG: Usuario null después de filtros (EstaActivo o FechaEliminacion) ===");
             return null;
         }
         
         // Validar contraseña con BCrypt
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.ContrasenaHash))
         {
+            Console.WriteLine("=== DEBUG: Contraseña incorrecta (BCrypt.Verify falló) ===");
             return null;
         }
         

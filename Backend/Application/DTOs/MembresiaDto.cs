@@ -8,6 +8,7 @@ public class MembresiaDto
     public string NombreSocio { get; set; } = string.Empty;
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
+    public DateTime FechaCreacion { get; set; }
     public decimal CostoTotal { get; set; }
     public string Estado { get; set; } = string.Empty; // AL DIA o VENCIDA
     public decimal TotalCargado { get; set; }
@@ -31,11 +32,18 @@ public class CrearMembresiaDto
     public DateTime FechaFin { get; set; }
     public decimal CostoTotal { get; set; }
     public List<int> IdsActividades { get; set; } = new();
+
+    // Datos del pago inicial
+    public decimal Monto { get; set; } // Monto del pago inicial (puede incluir descuentos/bonificaciones)
+    public int IdMetodoPago { get; set; } // Método de pago utilizado
+    public int IdUsuarioProcesa { get; set; } // Usuario que procesa el pago
 }
 
 public class ActualizarMembresiaDto
 {
-    public List<int> IdsActividades { get; set; } = new();
+    public DateTime? FechaInicio { get; set; } // Opcional - Nueva fecha de inicio
+    public DateTime? FechaFin { get; set; } // Opcional - Nueva fecha de fin
+    public List<int>? IdsActividades { get; set; } // Opcional - Nuevo array de IDs de actividades
 }
 
 public class FiltrosMembresiasDto
@@ -44,6 +52,8 @@ public class FiltrosMembresiasDto
     public DateTime? FechaDesde { get; set; }
     public DateTime? FechaHasta { get; set; }
     public bool? SoloImpagas { get; set; }
+    public string? Search { get; set; } // Búsqueda por nombre o número de socio
+    public string? EstadoVigencia { get; set; } // Filtro por vigencia: todas, vigentes, vencidas, proximas_vencer
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
