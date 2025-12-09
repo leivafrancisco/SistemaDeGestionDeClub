@@ -18,6 +18,8 @@ public class UsuarioDto
     public string NombreUsuario { get; set; } = string.Empty;
     public string NombreCompleto { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? Dni { get; set; }
+    public DateTime? FechaNacimiento { get; set; }
     public string Rol { get; set; } = string.Empty;
     public bool EstaActivo { get; set; }
 }
@@ -57,4 +59,15 @@ public class UsuarioDetalleDto
     public string Rol { get; set; } = string.Empty;
     public bool EstaActivo { get; set; }
     public DateTime FechaCreacion { get; set; }
+}
+
+public class ActualizarPerfilDto
+{
+    public string? Nombre { get; set; }
+    public string? Apellido { get; set; }
+    public string? Email { get; set; }
+    public string? Dni { get; set; }
+    public DateTime? FechaNacimiento { get; set; }
+    public string? Password { get; set; }
+    public string? PasswordActual { get; set; }
 }

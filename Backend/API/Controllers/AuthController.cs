@@ -51,24 +51,60 @@ public class AuthController : ControllerBase
         try
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return Unauthorized(new { message = "Token inválido" });
             }
-            
+
             var usuario = await _authService.ObtenerUsuarioActualAsync(userId);
-            
+
             if (usuario == null)
             {
                 return NotFound(new { message = "Usuario no encontrado" });
             }
-            
+
             return Ok(usuario);
         }
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Error al obtener usuario", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Actualizar perfil del usuario autenticado
+    /// </summary>
+    [HttpPut("perfil")]
+    [Authorize]
+    public async Task<ActionResult<UsuarioDto>> ActualizarPerfil([FromBody] ActualizarPerfilDto dto)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Token inválido" });
+            }
+
+            var usuarioActualizado = await _authService.ActualizarPerfilAsync(userId, dto);
+
+            if (usuarioActualizado == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            return Ok(usuarioActualizado);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Retorna 400 Bad Request para errores de validación (incluyendo contraseña incorrecta)
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al actualizar perfil", error = ex.Message });
         }
     }
 }
