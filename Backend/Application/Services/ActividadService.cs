@@ -34,7 +34,6 @@ public class ActividadService : IActividadService
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
-                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .ToListAsync();
@@ -52,7 +51,6 @@ public class ActividadService : IActividadService
                 Nombre = a.Nombre,
                 Descripcion = a.Descripcion,
                 Precio = a.Precio,
-                EsCuotaBase = a.EsCuotaBase,
                 FechaCreacion = a.FechaCreacion
             })
             .FirstOrDefaultAsync();
@@ -62,10 +60,32 @@ public class ActividadService : IActividadService
 
     public async Task<ActividadDto> CrearAsync(CrearActividadDto dto)
     {
+        // Validar nombre
+        if (string.IsNullOrWhiteSpace(dto.Nombre))
+        {
+            throw new InvalidOperationException("El nombre es requerido");
+        }
+
+        if (dto.Nombre.Length < 3)
+        {
+            throw new InvalidOperationException("El nombre debe tener al menos 3 caracteres");
+        }
+
+        if (dto.Nombre.Length > 100)
+        {
+            throw new InvalidOperationException("El nombre no puede tener más de 100 caracteres");
+        }
+
         // Validar que el nombre no exista
         if (await _context.Actividades.AnyAsync(a => a.Nombre == dto.Nombre && a.FechaEliminacion == null))
         {
             throw new InvalidOperationException("Ya existe una actividad con este nombre");
+        }
+
+        // Validar descripción
+        if (!string.IsNullOrWhiteSpace(dto.Descripcion) && dto.Descripcion.Length > 500)
+        {
+            throw new InvalidOperationException("La descripción no puede tener más de 500 caracteres");
         }
 
         // Validar precio
@@ -76,10 +96,9 @@ public class ActividadService : IActividadService
 
         var actividad = new Actividad
         {
-            Nombre = dto.Nombre,
-            Descripcion = dto.Descripcion,
+            Nombre = dto.Nombre.Trim(),
+            Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim(),
             Precio = dto.Precio,
-            EsCuotaBase = dto.EsCuotaBase,
             FechaCreacion = DateTime.Now,
             FechaActualizacion = DateTime.Now
         };
@@ -93,7 +112,6 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
-            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }
@@ -108,10 +126,32 @@ public class ActividadService : IActividadService
             throw new InvalidOperationException("Actividad no encontrada");
         }
 
+        // Validar nombre
+        if (string.IsNullOrWhiteSpace(dto.Nombre))
+        {
+            throw new InvalidOperationException("El nombre es requerido");
+        }
+
+        if (dto.Nombre.Length < 3)
+        {
+            throw new InvalidOperationException("El nombre debe tener al menos 3 caracteres");
+        }
+
+        if (dto.Nombre.Length > 100)
+        {
+            throw new InvalidOperationException("El nombre no puede tener más de 100 caracteres");
+        }
+
         // Validar nombre único (excepto la misma actividad)
         if (await _context.Actividades.AnyAsync(a => a.Nombre == dto.Nombre && a.Id != id && a.FechaEliminacion == null))
         {
             throw new InvalidOperationException("Ya existe una actividad con este nombre");
+        }
+
+        // Validar descripción
+        if (!string.IsNullOrWhiteSpace(dto.Descripcion) && dto.Descripcion.Length > 500)
+        {
+            throw new InvalidOperationException("La descripción no puede tener más de 500 caracteres");
         }
 
         // Validar precio
@@ -120,10 +160,10 @@ public class ActividadService : IActividadService
             throw new InvalidOperationException("El precio no puede ser negativo");
         }
 
-        actividad.Nombre = dto.Nombre;
-        actividad.Descripcion = dto.Descripcion;
+        actividad.Nombre = dto.Nombre.Trim();
+        actividad.Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim();
         actividad.Precio = dto.Precio;
-        actividad.EsCuotaBase = dto.EsCuotaBase;
+        actividad.FechaActualizacion = DateTime.Now;
 
         await _context.SaveChangesAsync();
 
@@ -133,7 +173,6 @@ public class ActividadService : IActividadService
             Nombre = actividad.Nombre,
             Descripcion = actividad.Descripcion,
             Precio = actividad.Precio,
-            EsCuotaBase = actividad.EsCuotaBase,
             FechaCreacion = actividad.FechaCreacion
         };
     }

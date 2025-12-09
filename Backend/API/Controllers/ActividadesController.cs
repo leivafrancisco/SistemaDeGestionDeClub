@@ -93,6 +93,11 @@ public class ActividadesController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            // Si el mensaje indica que no se encontró, retornar 404
+            if (ex.Message.Contains("no encontrada", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new { message = ex.Message });
+            }
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
