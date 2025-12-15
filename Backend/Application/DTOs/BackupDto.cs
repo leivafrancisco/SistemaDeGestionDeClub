@@ -29,3 +29,16 @@ public class BackupArchivoDto
     public long TamanoBytes { get; set; }
     public string TamanoFormateado { get; set; } = string.Empty;
 }
+
+public class RestoreRequestDto
+{
+    public string RutaBackup { get; set; } = string.Empty;
+    public string NombreBaseDatos { get; set; } = string.Empty;
+}
+
+public class RestoreResponseDto
+{
+    public bool Exitoso { get; set; }
+    public string Mensaje { get; set; } = string.Empty;
+    public DateTime FechaHoraRestore { get; set; }
+}

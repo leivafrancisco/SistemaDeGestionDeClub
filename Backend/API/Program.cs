@@ -23,6 +23,10 @@ builder.Services.AddScoped<IMembresiaService, MembresiaService>();
 builder.Services.AddScoped<IPagoService, PagoService>();
 builder.Services.AddScoped<IAsistenciaService, AsistenciaService>();
 builder.Services.AddScoped<IBackupService, BackupService>();
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+
+// HttpContextAccessor para auditoría
+builder.Services.AddHttpContextAccessor();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "TuClaveSecretaSuperSeguraDeAlMenos32Caracteres!";

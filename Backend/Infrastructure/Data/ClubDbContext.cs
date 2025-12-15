@@ -1,14 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using System.Text.Json;
 using SistemaDeGestionDeClub.Domain.Entities;
 
 namespace SistemaDeGestionDeClub.Infrastructure.Data;
 
 public class ClubDbContext : DbContext
 {
-    public ClubDbContext(DbContextOptions<ClubDbContext> options) : base(options)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public ClubDbContext(DbContextOptions<ClubDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
-    
+
     public DbSet<Persona> Personas { get; set; }
     public DbSet<Rol> Roles { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
@@ -19,6 +25,7 @@ public class ClubDbContext : DbContext
     public DbSet<MetodoPago> MetodosPago { get; set; }
     public DbSet<Pago> Pagos { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
+    public DbSet<Auditoria> Auditorias { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -223,30 +230,260 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
-            
+
             entity.HasIndex(e => new { e.IdSocio, e.FechaHoraIngreso });
-            
+
             entity.HasOne(e => e.Socio)
                 .WithMany(s => s.Asistencias)
                 .HasForeignKey(e => e.IdSocio)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Configuración de Auditoria
+        modelBuilder.Entity<Auditoria>(entity =>
+        {
+            entity.ToTable("auditoria");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Tabla).HasColumnName("tabla").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Operacion).HasColumnName("operacion").HasMaxLength(20).IsRequired();
+            entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+            entity.Property(e => e.NombreUsuario).HasColumnName("nombre_usuario").HasMaxLength(100);
+            entity.Property(e => e.FechaHora).HasColumnName("fecha_hora").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.ValoresAnteriores).HasColumnName("valores_anteriores");
+            entity.Property(e => e.ValoresNuevos).HasColumnName("valores_nuevos");
+            entity.Property(e => e.NombreEntidad).HasColumnName("nombre_entidad").HasMaxLength(100);
+            entity.Property(e => e.IdEntidad).HasColumnName("id_entidad").HasMaxLength(50);
+            entity.Property(e => e.Detalles).HasColumnName("detalles").HasMaxLength(500);
+
+            entity.HasIndex(e => e.Tabla);
+            entity.HasIndex(e => e.Operacion);
+            entity.HasIndex(e => e.IdUsuario);
+            entity.HasIndex(e => e.FechaHora);
+        });
     }
     
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Actualizar automáticamente FechaActualizacion
+        // Obtener información del usuario actual
+        var usuarioId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var nombreUsuario = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Name)?.Value;
+
+        // Capturar cambios para auditoría ANTES de guardar
+        var auditEntries = new List<AuditoriaEntry>();
         var entries = ChangeTracker.Entries()
-            .Where(e => e.State == EntityState.Modified);
-        
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+            .Where(e => e.Entity.GetType() != typeof(Auditoria)) // No auditar la tabla de auditoría
+            .ToList();
+
         foreach (var entry in entries)
         {
-            if (entry.Entity.GetType().GetProperty("FechaActualizacion") != null)
+            // Actualizar FechaActualizacion automáticamente
+            if (entry.State == EntityState.Modified)
             {
-                entry.Property("FechaActualizacion").CurrentValue = DateTime.Now;
+                if (entry.Entity.GetType().GetProperty("FechaActualizacion") != null)
+                {
+                    entry.Property("FechaActualizacion").CurrentValue = DateTime.Now;
+                }
+            }
+
+            // Capturar valores ANTES de guardar
+            var valoresAnteriores = new Dictionary<string, object?>();
+            var valoresNuevos = new Dictionary<string, object?>();
+
+            foreach (var property in entry.Properties)
+            {
+                var propertyName = property.Metadata.Name;
+
+                // Omitir propiedades de auditoría y timestamps
+                if (propertyName == "FechaActualizacion" || propertyName == "FechaCreacion")
+                    continue;
+
+                if (entry.State == EntityState.Added)
+                {
+                    valoresNuevos[propertyName] = property.CurrentValue;
+                }
+                else if (entry.State == EntityState.Modified && property.IsModified)
+                {
+                    valoresAnteriores[propertyName] = property.OriginalValue;
+                    valoresNuevos[propertyName] = property.CurrentValue;
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    valoresAnteriores[propertyName] = property.OriginalValue;
+                }
+            }
+
+            // Guardar información de auditoría temporal (sin ID aún para INSERT)
+            auditEntries.Add(new AuditoriaEntry
+            {
+                Entry = entry,
+                UsuarioId = usuarioId,
+                NombreUsuario = nombreUsuario,
+                Estado = entry.State,
+                ValoresAnteriores = valoresAnteriores,
+                ValoresNuevos = valoresNuevos
+            });
+        }
+
+        // Guardar cambios originales
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // Ahora crear auditorías con IDs reales (después del SaveChanges)
+        if (auditEntries.Any())
+        {
+            var auditorias = auditEntries.Select(ae => CrearAuditoriaDesdeEntry(ae)).ToList();
+            await Auditorias.AddRangeAsync(auditorias, cancellationToken);
+            await base.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
+    }
+
+    // Clase auxiliar para guardar temporalmente la información de auditoría
+    private class AuditoriaEntry
+    {
+        public Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Entry { get; set; } = null!;
+        public string? UsuarioId { get; set; }
+        public string? NombreUsuario { get; set; }
+        public EntityState Estado { get; set; }
+        public Dictionary<string, object?> ValoresAnteriores { get; set; } = new();
+        public Dictionary<string, object?> ValoresNuevos { get; set; } = new();
+    }
+
+    private Auditoria CrearAuditoriaDesdeEntry(AuditoriaEntry auditEntry)
+    {
+        var entry = auditEntry.Entry;
+        var tableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name;
+        var operacion = auditEntry.Estado switch
+        {
+            EntityState.Added => "INSERT",
+            EntityState.Modified => "UPDATE",
+            EntityState.Deleted => "DELETE",
+            _ => "UNKNOWN"
+        };
+
+        // Obtener ID de la entidad DESPUÉS de guardar (ahora tiene el ID real)
+        string? idEntidad = null;
+        var idProperty = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "Id");
+        if (idProperty != null)
+        {
+            idEntidad = idProperty.CurrentValue?.ToString();
+        }
+
+        // Generar detalles legibles
+        string? detalles = GenerarDetalles(entry.Entity.GetType().Name, idEntidad, operacion);
+
+        return new Auditoria
+        {
+            Tabla = tableName,
+            Operacion = operacion,
+            IdUsuario = int.TryParse(auditEntry.UsuarioId, out var uid) ? uid : null,
+            NombreUsuario = auditEntry.NombreUsuario,
+            FechaHora = DateTime.Now,
+            ValoresAnteriores = auditEntry.ValoresAnteriores.Any() ? JsonSerializer.Serialize(auditEntry.ValoresAnteriores) : null,
+            ValoresNuevos = auditEntry.ValoresNuevos.Any() ? JsonSerializer.Serialize(auditEntry.ValoresNuevos) : null,
+            NombreEntidad = entry.Entity.GetType().Name,
+            IdEntidad = idEntidad,
+            Detalles = detalles
+        };
+    }
+
+    private Auditoria CrearAuditoria(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string? usuarioId, string? nombreUsuario)
+    {
+        var tableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name;
+        var operacion = entry.State switch
+        {
+            EntityState.Added => "INSERT",
+            EntityState.Modified => "UPDATE",
+            EntityState.Deleted => "DELETE",
+            _ => "UNKNOWN"
+        };
+
+        // Obtener ID de la entidad si existe
+        string? idEntidad = null;
+        var idProperty = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "Id");
+        if (idProperty != null)
+        {
+            idEntidad = idProperty.CurrentValue?.ToString();
+        }
+
+        // Capturar valores anteriores y nuevos
+        var valoresAnteriores = new Dictionary<string, object?>();
+        var valoresNuevos = new Dictionary<string, object?>();
+
+        foreach (var property in entry.Properties)
+        {
+            var propertyName = property.Metadata.Name;
+
+            // Omitir propiedades de auditoría y timestamps
+            if (propertyName == "FechaActualizacion" || propertyName == "FechaCreacion")
+                continue;
+
+            if (entry.State == EntityState.Added)
+            {
+                valoresNuevos[propertyName] = property.CurrentValue;
+            }
+            else if (entry.State == EntityState.Modified && property.IsModified)
+            {
+                valoresAnteriores[propertyName] = property.OriginalValue;
+                valoresNuevos[propertyName] = property.CurrentValue;
+            }
+            else if (entry.State == EntityState.Deleted)
+            {
+                valoresAnteriores[propertyName] = property.OriginalValue;
             }
         }
-        
-        return base.SaveChangesAsync(cancellationToken);
+
+        // Generar detalles legibles
+        string? detalles = GenerarDetalles(entry, operacion);
+
+        return new Auditoria
+        {
+            Tabla = tableName,
+            Operacion = operacion,
+            IdUsuario = int.TryParse(usuarioId, out var uid) ? uid : null,
+            NombreUsuario = nombreUsuario,
+            FechaHora = DateTime.Now,
+            ValoresAnteriores = valoresAnteriores.Any() ? JsonSerializer.Serialize(valoresAnteriores) : null,
+            ValoresNuevos = valoresNuevos.Any() ? JsonSerializer.Serialize(valoresNuevos) : null,
+            NombreEntidad = entry.Entity.GetType().Name,
+            IdEntidad = idEntidad,
+            Detalles = detalles
+        };
+    }
+
+    private string? GenerarDetalles(string entityType, string? id, string operacion)
+    {
+        try
+        {
+            return operacion switch
+            {
+                "INSERT" => $"Creó {entityType} (ID: {id ?? "N/A"})",
+                "UPDATE" => $"Modificó {entityType} (ID: {id ?? "N/A"})",
+                "DELETE" => $"Eliminó {entityType} (ID: {id ?? "N/A"})",
+                _ => null
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? GenerarDetalles(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string operacion)
+    {
+        try
+        {
+            var entityType = entry.Entity.GetType().Name;
+            var idProperty = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "Id");
+            var id = idProperty?.CurrentValue?.ToString();
+
+            return GenerarDetalles(entityType, id, operacion);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

@@ -122,4 +122,29 @@ public class BackupController : ControllerBase
             return StatusCode(500, new { mensaje = "Error al descargar el archivo de backup", error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Restaurar base de datos desde un archivo de backup (Solo Superadmin)
+    /// </summary>
+    /// <param name="request">Información del backup a restaurar</param>
+    /// <returns>Resultado de la restauración</returns>
+    [HttpPost("restaurar")]
+    public async Task<ActionResult<RestoreResponseDto>> RestaurarBackup([FromBody] RestoreRequestDto request)
+    {
+        try
+        {
+            var resultado = await _backupService.RestaurarBackupAsync(request);
+
+            if (!resultado.Exitoso)
+            {
+                return BadRequest(resultado);
+            }
+
+            return Ok(resultado);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al restaurar backup", error = ex.Message });
+        }
+    }
 }

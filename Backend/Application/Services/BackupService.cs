@@ -12,6 +12,7 @@ public interface IBackupService
     Task<List<string>> ObtenerBasesDatosDisponiblesAsync();
     Task<(bool exito, byte[]? datos, string? nombreArchivo, string? mensajeError)> ObtenerArchivoBackupAsync(string rutaCompleta);
     Task<List<BackupArchivoDto>> ObtenerBackupsDisponiblesAsync();
+    Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request);
 }
 
 public class BackupService : IBackupService
@@ -250,5 +251,87 @@ public class BackupService : IBackupService
         }
 
         return $"{tamano:0.##} {sufijos[orden]}";
+    }
+
+    public async Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request)
+    {
+        try
+        {
+            var fechaHora = DateTime.Now;
+
+            // Validar que el archivo de backup exista (traducir ruta Docker a host)
+            string rutaEnHost = request.RutaBackup;
+            if (request.RutaBackup.StartsWith("/backups/"))
+            {
+                rutaEnHost = request.RutaBackup.Replace("/backups/", "/Users/Shared/Backups/");
+            }
+
+            if (!File.Exists(rutaEnHost))
+            {
+                return new RestoreResponseDto
+                {
+                    Exitoso = false,
+                    Mensaje = "El archivo de backup no existe",
+                    FechaHoraRestore = fechaHora
+                };
+            }
+
+            // IMPORTANTE: Necesitamos usar la ruta del contenedor Docker, no la del host
+            string rutaBackupDocker = request.RutaBackup;
+
+            // Construir el comando SQL para restaurar
+            // NOTA: Usamos WITH REPLACE para sobrescribir la base de datos existente
+            //       y RECOVERY para dejar la BD lista para usar
+            var sqlRestore = $@"
+                USE master;
+                ALTER DATABASE [{request.NombreBaseDatos}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                RESTORE DATABASE [{request.NombreBaseDatos}]
+                FROM DISK = @rutaBackup
+                WITH REPLACE,
+                     RECOVERY,
+                     STATS = 10;
+                ALTER DATABASE [{request.NombreBaseDatos}] SET MULTI_USER;";
+
+            // Usar una conexión directa a master (no el DbContext)
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var builder = new SqlConnectionStringBuilder(connectionString)
+            {
+                InitialCatalog = "master" // Conectar a master para poder manipular otras BDs
+            };
+
+            await using var connection = new SqlConnection(builder.ConnectionString);
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = sqlRestore;
+            command.CommandTimeout = 600; // 10 minutos para restore
+            command.Parameters.Add(new SqlParameter("@rutaBackup", rutaBackupDocker));
+
+            await command.ExecuteNonQueryAsync();
+
+            return new RestoreResponseDto
+            {
+                Exitoso = true,
+                Mensaje = $"Base de datos '{request.NombreBaseDatos}' restaurada exitosamente",
+                FechaHoraRestore = fechaHora
+            };
+        }
+        catch (SqlException ex)
+        {
+            return new RestoreResponseDto
+            {
+                Exitoso = false,
+                Mensaje = $"Error de SQL Server al restaurar backup: {ex.Message}",
+                FechaHoraRestore = DateTime.Now
+            };
+        }
+        catch (Exception ex)
+        {
+            return new RestoreResponseDto
+            {
+                Exitoso = false,
+                Mensaje = $"Error al restaurar backup: {ex.Message}",
+                FechaHoraRestore = DateTime.Now
+            };
+        }
     }
 }
