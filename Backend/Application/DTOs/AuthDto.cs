@@ -1,8 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace SistemaDeGestionDeClub.Application.DTOs;
 
 public class LoginDto
 {
     public string NombreUsuario { get; set; } = string.Empty;
+
+    [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
 }
 

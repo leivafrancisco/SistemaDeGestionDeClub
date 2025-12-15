@@ -68,7 +68,14 @@ public class AuthService : IAuthService
         }
         
         // Validar contraseña con BCrypt
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.ContrasenaHash))
+        Console.WriteLine($"=== DEBUG BCrypt ===");
+        Console.WriteLine($"Password recibida: '{dto.Password}' (len={dto.Password.Length})");
+        Console.WriteLine($"Hash en BD: '{usuario.ContrasenaHash}' (len={usuario.ContrasenaHash.Length})");
+        var verificado = BCrypt.Net.BCrypt.Verify(dto.Password, usuario.ContrasenaHash);
+        Console.WriteLine($"BCrypt.Verify result: {verificado}");
+        Console.WriteLine($"==================");
+
+        if (!verificado)
         {
             Console.WriteLine("=== DEBUG: Contraseña incorrecta (BCrypt.Verify falló) ===");
             return null;
