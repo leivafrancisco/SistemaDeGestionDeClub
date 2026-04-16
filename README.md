@@ -99,12 +99,17 @@ El frontend estará disponible en: `http://localhost:3000`
 
 ## 👤 Credenciales de Prueba
 
-### Usuario Administrador
+### Superadmin
+- **Usuario**: `superadmin`
+- **Contraseña**: `super123`
+- **Rol**: superadmin
+
+### Administrador
 - **Usuario**: `admin`
 - **Contraseña**: `admin123`
 - **Rol**: admin
 
-### Usuario Recepcionista
+### Recepcionista
 - **Usuario**: `recepcionista`
 - **Contraseña**: `recep123`
 - **Rol**: recepcionista
@@ -156,6 +161,115 @@ SistemaDeGestionDeClub/
 - `estaActivo`: Filtrar por estado (true/false)
 - `page`: Número de página (default: 1)
 - `pageSize`: Elementos por página (default: 20)
+
+## 💬 Flujo: Crear Membresía
+
+**Contexto:** Andrés (admin) renueva la membresía de un socio que viene a pagar, con pago parcial inicial.
+
+---
+
+**1. Buscar el socio**
+
+```
+GET /api/socios?search=38521047
+```
+
+```json
+{
+  "id": 42,
+  "numeroSocio": "SOC-0042",
+  "nombre": "Carlos",
+  "apellido": "Rodríguez",
+  "estaActivo": true
+}
+```
+
+---
+
+**2. Ver actividades disponibles**
+
+```
+GET /api/actividades
+```
+
+```json
+[
+  { "id": 1, "nombre": "Fútbol",   "precio": 8000.00 },
+  { "id": 2, "nombre": "Gimnasio", "precio": 6000.00 },
+  { "id": 3, "nombre": "Natación", "precio": 7000.00 }
+]
+```
+
+> El socio elige Fútbol y Gimnasio. Puede abonar $10.000 hoy y el resto después.
+
+---
+
+**3. Crear membresía con pago parcial**
+
+```
+POST /api/membresias
+```
+
+```json
+{
+  "idSocio": 42,
+  "fechaInicio": "2026-04-16",
+  "fechaFin": "2026-05-15",
+  "idsActividades": [1, 2],
+  "costoTotal": 14000.00,
+  "monto": 10000.00,
+  "idMetodoPago": 1
+}
+```
+
+> `costoTotal` = total de la membresía · `monto` = lo que abona hoy (puede ser parcial)
+
+**El sistema internamente:**
+1. Valida fechas y que no haya solapamiento con otra membresía del mismo socio
+2. Inserta la membresía y congela los precios de cada actividad en `membresia_actividades`
+3. Registra el pago inicial en `pagos`
+4. Calcula: `saldo = costoTotal - monto = 14000 - 10000 = 4000`
+
+```json
+{
+  "id": 210,
+  "numeroSocio": "SOC-0042",
+  "fechaInicio": "2026-04-16",
+  "fechaFin": "2026-05-15",
+  "actividades": [
+    { "nombre": "Fútbol",   "precioAlMomento": 8000.00 },
+    { "nombre": "Gimnasio", "precioAlMomento": 6000.00 }
+  ],
+  "costoTotal": 14000.00,
+  "totalPagado": 10000.00,
+  "saldo": 4000.00,
+  "estaPaga": false
+}
+```
+
+---
+
+**4. Pagar el saldo restante (cuando el socio trae el resto)**
+
+```
+POST /api/pagos
+```
+
+```json
+{ "idMembresia": 210, "idMetodoPago": 1, "monto": 4000.00 }
+```
+
+```json
+{
+  "numeroPago": "PAG-000315-2026",
+  "monto": 4000.00,
+  "saldoAntes": 4000.00,
+  "saldoDespues": 0.00,
+  "estaPaga": true
+}
+```
+
+---
 
 ## 🛡️ Roles y Permisos
 

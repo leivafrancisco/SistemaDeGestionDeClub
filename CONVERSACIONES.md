@@ -827,3 +827,157 @@ AuditoriaService.ObtenerAuditoriasAsync()
 ```
 
 > **Superadmin:** Fue Andrés (admin) a las 16:42. Todo en orden.
+
+---
+
+## Conversación 15 — Renovar membresía de socio existente con seña (Admin)
+
+**Contexto:** Un socio con membresía vencida viene a renovar pero solo puede abonar una parte hoy.
+
+---
+
+> **Andrés:** Busco al socio con DNI 38521047.
+
+**Llamada API → HU-03**
+```
+GET /api/socios?search=38521047
+```
+
+**Funciones internas del sistema:**
+```
+SocioService.ObtenerTodosAsync(search="38521047")
+  1. SELECT socios JOIN personas
+     WHERE fecha_eliminacion IS NULL
+       AND (dni = '38521047' OR email LIKE '%38521047%' OR ...)
+```
+
+**Respuesta del sistema:**
+```json
+{
+  "id": 42,
+  "numeroSocio": "SOC-0042",
+  "nombre": "Carlos",
+  "apellido": "Rodríguez",
+  "estaActivo": true
+}
+```
+
+> **Andrés:** ¿Qué actividades tiene disponibles?
+
+**Llamada API → HU-09**
+```
+GET /api/actividades
+```
+
+**Funciones internas del sistema:**
+```
+ActividadService.ObtenerTodasAsync()
+  1. SELECT * FROM actividades WHERE fecha_eliminacion IS NULL
+  NOTA: es_cuota_base existe en la BD pero el sistema no lo usa.
+        Todas las actividades se tratan igual.
+```
+
+**Respuesta del sistema:**
+```json
+[
+  { "id": 1, "nombre": "Fútbol",   "precio": 8000.00 },
+  { "id": 2, "nombre": "Gimnasio", "precio": 6000.00 },
+  { "id": 3, "nombre": "Natación", "precio": 7000.00 }
+]
+```
+
+> **Carlos:** Quiero Fútbol y Gimnasio por un mes. Hoy dejo $10.000 de seña y el resto la semana que viene.
+
+**Llamada API → HU-15**
+```
+POST /api/membresias
+{
+  "idSocio": 42,
+  "fechaInicio": "2026-04-16",
+  "fechaFin": "2026-05-15",
+  "idsActividades": [1, 2],
+  "costoTotal": 14000.00,
+  "monto": 10000.00,
+  "idMetodoPago": 1
+}
+```
+
+**Funciones internas del sistema:**
+```
+MembresiaService.CrearAsync()
+  1. Valida que el socio 42 existe y está activo
+  2. Valida fechas: FechaFin (2026-05-15) > FechaInicio (2026-04-16) ✓
+  3. Valida solapamiento:
+       SELECT COUNT(*) FROM membresias
+       WHERE id_socio = 42
+         AND fecha_eliminacion IS NULL
+         AND (fecha_inicio <= '2026-05-15' AND fecha_fin >= '2026-04-16')
+       → 0, no hay solapamiento ✓
+  4. Valida costoTotal > 0 ✓ y monto > 0 ✓
+     NOTA: monto (10000) puede ser menor a costoTotal (14000) — pago parcial
+  5. Valida que el método de pago (id=1, Efectivo) existe
+  6. INSERT INTO membresias (id_socio=42, fecha_inicio, fecha_fin, costo_total=14000)
+  7. Congela precios actuales:
+       INSERT INTO membresia_actividades (id_membresia, id_actividad=1, precio_mensual_congelado=8000)
+       INSERT INTO membresia_actividades (id_membresia, id_actividad=2, precio_mensual_congelado=6000)
+  8. Registra pago inicial (solo la seña):
+       INSERT INTO pagos (id_membresia, id_metodo_pago=1, monto=10000, fecha_pago=NOW())
+  9. ClubDbContext.SaveChangesAsync() × 3
+  10. Calcula en el DTO:
+       TotalCargado = 8000 + 6000 = 14000
+       TotalPagado  = 10000
+       Saldo        = 14000 - 10000 = 4000  ← queda deuda
+       EstaPaga     = false
+```
+
+**Respuesta del sistema:**
+```json
+{
+  "id": 210,
+  "numeroSocio": "SOC-0042",
+  "fechaInicio": "2026-04-16",
+  "fechaFin": "2026-05-15",
+  "actividades": [
+    { "nombre": "Fútbol",   "precioAlMomento": 8000.00 },
+    { "nombre": "Gimnasio", "precioAlMomento": 6000.00 }
+  ],
+  "costoTotal": 14000.00,
+  "totalPagado": 10000.00,
+  "saldo": 4000.00,
+  "estaPaga": false
+}
+```
+
+> **Andrés:** Listo Carlos, membresía creada. Le queda un saldo de $4.000 para la semana que viene.
+
+*(La semana siguiente, Carlos trae el resto)*
+
+**Llamada API → HU-23**
+```
+POST /api/pagos
+{ "idMembresia": 210, "idMetodoPago": 1, "monto": 4000.00 }
+```
+
+**Funciones internas del sistema:**
+```
+PagoService.RegistrarPagoAsync()
+  1. Calcula saldo: totalCargado=14000, totalPagado=10000, saldoActual=4000
+  2. Valida 4000 <= 4000 ✓
+  3. INSERT INTO pagos (monto=4000)
+  4. MembresiaService.ActualizarEstadoDespuesDePagoAsync(210):
+       saldo = 14000 - 14000 = 0 → Estado = Activa
+```
+
+**Respuesta del sistema:**
+```json
+{
+  "numeroPago": "PAG-000315-2026",
+  "nombreSocio": "Carlos Rodríguez",
+  "monto": 4000.00,
+  "saldoAntes": 4000.00,
+  "saldoDespues": 0.00,
+  "estaPaga": true
+}
+```
+
+> **Andrés:** Listo Carlos, membresía totalmente paga. Comprobante: PAG-000315-2026.

@@ -210,6 +210,19 @@ GO
 INSERT INTO roles (nombre) VALUES ('superadmin'), ('admin'), ('recepcionista');
 GO
 
+-- Usuarios de prueba
+INSERT INTO personas (nombre, apellido, email) VALUES
+    ('Super', 'Admin', 'superadmin@club.com'),
+    ('Admin', 'Club',  'admin@club.com'),
+    ('Recepcio', 'Nista', 'recepcionista@club.com');
+GO
+
+INSERT INTO usuarios (id_persona, id_rol, nombre_usuario, contrasena_hash) VALUES
+    (1, 1, 'superadmin',    'super123'),
+    (2, 2, 'admin',         'admin123'),
+    (3, 3, 'recepcionista', 'recep123');
+GO
+
 INSERT INTO metodos_pago (nombre) VALUES ('Efectivo'), ('Tarjeta'), ('Transferencia');
 GO
 
