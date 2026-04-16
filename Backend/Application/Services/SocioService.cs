@@ -7,13 +7,13 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface ISocioService
 {
-    Task<List<SocioDto>> ObtenerTodosAsync(string? search = null, bool? estaActivo = null, int page = 1, int pageSize = 20);
-    Task<SocioDto?> ObtenerPorIdAsync(int id);
-    Task<SocioDto?> ObtenerPorNumeroSocioAsync(string numeroSocio);
-    Task<SocioDto> CrearAsync(CrearSocioDto dto);
-    Task<SocioDto> ActualizarAsync(int id, ActualizarSocioDto dto);
-    Task<bool> DesactivarAsync(int id);
-    Task<int> ContarTotalAsync();
+    Task<List<SocioDto>> ObtenerTodosSociosAsync(string? search = null, bool? estaActivo = null, int page = 1, int pageSize = 20);
+    Task<SocioDto?> ObtenerSocioPorIdAsync(int id);
+    Task<SocioDto?> ObtenerSocioPorNumeroAsync(string numeroSocio);
+    Task<SocioDto> CrearSocioAsync(CrearSocioDto dto);
+    Task<SocioDto> ActualizarSocioAsync(int id, ActualizarSocioDto dto);
+    Task<bool> DesactivarSocioAsync(int id);
+    Task<int> ContarTotalSociosAsync();
 }
 
 public class SocioService : ISocioService
@@ -25,7 +25,7 @@ public class SocioService : ISocioService
         _context = context;
     }
     
-    public async Task<List<SocioDto>> ObtenerTodosAsync(string? search = null, bool? estaActivo = null, int page = 1, int pageSize = 20)
+    public async Task<List<SocioDto>> ObtenerTodosSociosAsync(string? search = null, bool? estaActivo = null, int page = 1, int pageSize = 20)
     {
         var query = _context.Socios
             .Include(s => s.Persona)
@@ -70,7 +70,7 @@ public class SocioService : ISocioService
         return socios;
     }
     
-    public async Task<SocioDto?> ObtenerPorIdAsync(int id)
+    public async Task<SocioDto?> ObtenerSocioPorIdAsync(int id)
     {
         var socio = await _context.Socios
             .Include(s => s.Persona)
@@ -93,7 +93,7 @@ public class SocioService : ISocioService
         return socio;
     }
     
-    public async Task<SocioDto?> ObtenerPorNumeroSocioAsync(string numeroSocio)
+    public async Task<SocioDto?> ObtenerSocioPorNumeroAsync(string numeroSocio)
     {
         var socio = await _context.Socios
             .Include(s => s.Persona)
@@ -116,7 +116,7 @@ public class SocioService : ISocioService
         return socio;
     }
     
-    public async Task<SocioDto> CrearAsync(CrearSocioDto dto)
+    public async Task<SocioDto> CrearSocioAsync(CrearSocioDto dto)
     {
         // Validar que el email no exista
         if (await _context.Personas.AnyAsync(p => p.Email == dto.Email && p.FechaEliminacion == null))
@@ -198,7 +198,7 @@ public class SocioService : ISocioService
         };
     }
     
-    public async Task<SocioDto> ActualizarAsync(int id, ActualizarSocioDto dto)
+    public async Task<SocioDto> ActualizarSocioAsync(int id, ActualizarSocioDto dto)
     {
         var socio = await _context.Socios
             .Include(s => s.Persona)
@@ -248,7 +248,7 @@ public class SocioService : ISocioService
         };
     }
     
-    public async Task<bool> DesactivarAsync(int id)
+    public async Task<bool> DesactivarSocioAsync(int id)
     {
         var socio = await _context.Socios.FindAsync(id);
         
@@ -265,7 +265,7 @@ public class SocioService : ISocioService
         return true;
     }
     
-    public async Task<int> ContarTotalAsync()
+    public async Task<int> ContarTotalSociosAsync()
     {
         return await _context.Socios
             .Where(s => s.FechaEliminacion == null && s.EstaActivo)

@@ -8,14 +8,14 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface IPagoService
 {
-    Task<List<PagoDto>> ObtenerTodosAsync(FiltrosPagosDto? filtros = null);
-    Task<PagoDto?> ObtenerPorIdAsync(int id);
+    Task<List<PagoDto>> ObtenerTodosPagosAsync(FiltrosPagosDto? filtros = null);
+    Task<PagoDto?> ObtenerPagoPorIdAsync(int id);
     Task<ComprobantePagoDto> RegistrarPagoAsync(RegistrarPagoDto dto, int idUsuario);
     Task<ComprobantePagoDto> GenerarComprobanteAsync(int idPago);
     Task<bool> AnularPagoAsync(int id);
     Task<decimal> ObtenerTotalRecaudadoAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null);
     Task<List<MetodoPagoDto>> ObtenerMetodosPagoAsync();
-    Task<EstadisticasPagosDto> ObtenerEstadisticasAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null);
+    Task<EstadisticasPagosDto> ObtenerEstadisticasPagosAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null);
 }
 
 public class PagoService : IPagoService
@@ -29,7 +29,7 @@ public class PagoService : IPagoService
         _membresiaService = membresiaService;
     }
 
-    public async Task<List<PagoDto>> ObtenerTodosAsync(FiltrosPagosDto? filtros = null)
+    public async Task<List<PagoDto>> ObtenerTodosPagosAsync(FiltrosPagosDto? filtros = null)
     {
         filtros ??= new FiltrosPagosDto();
 
@@ -79,7 +79,7 @@ public class PagoService : IPagoService
         return pagos.Select(p => MapearADto(p)).ToList();
     }
 
-    public async Task<PagoDto?> ObtenerPorIdAsync(int id)
+    public async Task<PagoDto?> ObtenerPagoPorIdAsync(int id)
     {
         var pago = await _context.Pagos
             .Include(p => p.Membresia)
@@ -279,7 +279,7 @@ public class PagoService : IPagoService
         }).ToList();
     }
 
-    public async Task<EstadisticasPagosDto> ObtenerEstadisticasAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+    public async Task<EstadisticasPagosDto> ObtenerEstadisticasPagosAsync(DateTime? fechaDesde = null, DateTime? fechaHasta = null)
     {
         var hoy = DateTime.Today;
         var primerDiaMes = new DateTime(hoy.Year, hoy.Month, 1);

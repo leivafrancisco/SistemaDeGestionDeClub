@@ -7,12 +7,12 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface IMembresiaService
 {
-    Task<List<MembresiaDto>> ObtenerTodosAsync(FiltrosMembresiasDto? filtros = null);
-    Task<MembresiaDto?> ObtenerPorIdAsync(int id);
-    Task<MembresiaDto> CrearAsync(CrearMembresiaDto dto);
-    Task<MembresiaDto> ActualizarAsync(int id, ActualizarMembresiaDto dto);
-    Task<bool> EliminarAsync(int id);
-    Task<int> ContarTotalAsync();
+    Task<List<MembresiaDto>> ObtenerTodasMembresiasAsync(FiltrosMembresiasDto? filtros = null);
+    Task<MembresiaDto?> ObtenerMembresiaPorIdAsync(int id);
+    Task<MembresiaDto> CrearMembresiaAsync(CrearMembresiaDto dto);
+    Task<MembresiaDto> ActualizarMembresiaAsync(int id, ActualizarMembresiaDto dto);
+    Task<bool> EliminarMembresiaAsync(int id);
+    Task<int> ContarTotalMembresiasAsync();
     Task<MembresiaDto> AsignarActividadAsync(AsignarActividadDto dto);
     Task<MembresiaDto> RemoverActividadAsync(RemoverActividadDto dto);
     Task ActualizarEstadoDespuesDePagoAsync(int idMembresia);
@@ -27,7 +27,7 @@ public class MembresiaService : IMembresiaService
         _context = context;
     }
 
-    public async Task<List<MembresiaDto>> ObtenerTodosAsync(FiltrosMembresiasDto? filtros = null)
+    public async Task<List<MembresiaDto>> ObtenerTodasMembresiasAsync(FiltrosMembresiasDto? filtros = null)
     {
         filtros ??= new FiltrosMembresiasDto();
 
@@ -115,7 +115,7 @@ public class MembresiaService : IMembresiaService
         return membresiasDtos;
     }
 
-    public async Task<MembresiaDto?> ObtenerPorIdAsync(int id)
+    public async Task<MembresiaDto?> ObtenerMembresiaPorIdAsync(int id)
     {
         var membresia = await _context.Membresias
             .Include(m => m.Socio)
@@ -129,7 +129,7 @@ public class MembresiaService : IMembresiaService
         return membresia == null ? null : MapearADto(membresia);
     }
 
-    public async Task<MembresiaDto> CrearAsync(CrearMembresiaDto dto)
+    public async Task<MembresiaDto> CrearMembresiaAsync(CrearMembresiaDto dto)
     {
         // Validar que el socio existe
         var socio = await _context.Socios
@@ -260,10 +260,10 @@ public class MembresiaService : IMembresiaService
         Console.WriteLine($"[DEBUG] Pago inicial creado con ID: {pago.Id}, Monto: {pago.Monto}");
 
         // Recargar la membresía con todas sus relaciones
-        return (await ObtenerPorIdAsync(membresia.Id))!;
+        return (await ObtenerMembresiaPorIdAsync(membresia.Id))!;
     }
 
-    public async Task<MembresiaDto> ActualizarAsync(int id, ActualizarMembresiaDto dto)
+    public async Task<MembresiaDto> ActualizarMembresiaAsync(int id, ActualizarMembresiaDto dto)
     {
         var membresia = await _context.Membresias
             .Include(m => m.MembresiaActividades)
@@ -380,10 +380,10 @@ public class MembresiaService : IMembresiaService
         Console.WriteLine($"[DEBUG ActualizarMembresia] Membresía actualizada exitosamente");
 
         // Recargar la membresía con todas sus relaciones
-        return (await ObtenerPorIdAsync(membresia.Id))!;
+        return (await ObtenerMembresiaPorIdAsync(membresia.Id))!;
     }
 
-    public async Task<bool> EliminarAsync(int id)
+    public async Task<bool> EliminarMembresiaAsync(int id)
     {
         var membresia = await _context.Membresias
             .Include(m => m.Pagos)
@@ -408,7 +408,7 @@ public class MembresiaService : IMembresiaService
         return true;
     }
 
-    public async Task<int> ContarTotalAsync()
+    public async Task<int> ContarTotalMembresiasAsync()
     {
         return await _context.Membresias
             .Where(m => m.FechaEliminacion == null)
@@ -458,7 +458,7 @@ public class MembresiaService : IMembresiaService
         await _context.SaveChangesAsync();
 
         // Recargar la membresía con todas sus relaciones
-        return (await ObtenerPorIdAsync(membresia.Id))!;
+        return (await ObtenerMembresiaPorIdAsync(membresia.Id))!;
     }
 
     public async Task<MembresiaDto> RemoverActividadAsync(RemoverActividadDto dto)
@@ -496,7 +496,7 @@ public class MembresiaService : IMembresiaService
         await _context.SaveChangesAsync();
 
         // Recargar la membresía con todas sus relaciones
-        return (await ObtenerPorIdAsync(membresia.Id))!;
+        return (await ObtenerMembresiaPorIdAsync(membresia.Id))!;
     }
 
     /// <summary>

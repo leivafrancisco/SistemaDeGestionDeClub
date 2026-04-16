@@ -29,7 +29,7 @@ public class UsuariosController : ControllerBase
             // Obtener el rol del usuario actual desde el token
             var currentUserRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 
-            var usuario = await _usuarioService.CrearAsync(dto, currentUserRole);
+            var usuario = await _usuarioService.CrearUsuarioAsync(dto, currentUserRole);
             return CreatedAtAction(nameof(ObtenerPorId), new { id = usuario!.Id }, usuario);
         }
         catch (ArgumentException ex)
@@ -61,7 +61,7 @@ public class UsuariosController : ControllerBase
     {
         try
         {
-            var usuarios = await _usuarioService.ObtenerTodosAsync(rol, estaActivo);
+            var usuarios = await _usuarioService.ObtenerTodosUsuariosAsync(rol, estaActivo);
             return Ok(usuarios);
         }
         catch (Exception ex)
@@ -79,7 +79,7 @@ public class UsuariosController : ControllerBase
     {
         try
         {
-            var usuario = await _usuarioService.ObtenerPorIdAsync(id);
+            var usuario = await _usuarioService.ObtenerUsuarioPorIdAsync(id);
 
             if (usuario == null)
             {
@@ -103,7 +103,7 @@ public class UsuariosController : ControllerBase
     {
         try
         {
-            var usuario = await _usuarioService.ActualizarAsync(id, dto);
+            var usuario = await _usuarioService.ActualizarUsuarioAsync(id, dto);
 
             if (usuario == null)
             {
@@ -131,7 +131,7 @@ public class UsuariosController : ControllerBase
     {
         try
         {
-            var resultado = await _usuarioService.DesactivarAsync(id);
+            var resultado = await _usuarioService.DesactivarUsuarioAsync(id);
 
             if (!resultado)
             {

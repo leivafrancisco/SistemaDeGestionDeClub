@@ -44,7 +44,7 @@ public class PagosController : ControllerBase
                 PageSize = pageSize
             };
 
-            var pagos = await _pagoService.ObtenerTodosAsync(filtros);
+            var pagos = await _pagoService.ObtenerTodosPagosAsync(filtros);
             return Ok(pagos);
         }
         catch (Exception ex)
@@ -61,7 +61,7 @@ public class PagosController : ControllerBase
     {
         try
         {
-            var pago = await _pagoService.ObtenerPorIdAsync(id);
+            var pago = await _pagoService.ObtenerPagoPorIdAsync(id);
 
             if (pago == null)
             {
@@ -183,7 +183,7 @@ public class PagosController : ControllerBase
     {
         try
         {
-            var estadisticas = await _pagoService.ObtenerEstadisticasAsync(fechaDesde, fechaHasta);
+            var estadisticas = await _pagoService.ObtenerEstadisticasPagosAsync(fechaDesde, fechaHasta);
             return Ok(estadisticas);
         }
         catch (Exception ex)

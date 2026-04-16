@@ -7,11 +7,11 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface IActividadService
 {
-    Task<List<ActividadDto>> ObtenerTodasAsync();
-    Task<ActividadDto?> ObtenerPorIdAsync(int id);
-    Task<ActividadDto> CrearAsync(CrearActividadDto dto);
-    Task<ActividadDto> ActualizarAsync(int id, ActualizarActividadDto dto);
-    Task<bool> EliminarAsync(int id);
+    Task<List<ActividadDto>> ObtenerTodasActividadesAsync();
+    Task<ActividadDto?> ObtenerActividadPorIdAsync(int id);
+    Task<ActividadDto> CrearActividadAsync(CrearActividadDto dto);
+    Task<ActividadDto> ActualizarActividadAsync(int id, ActualizarActividadDto dto);
+    Task<bool> EliminarActividadAsync(int id);
 }
 
 public class ActividadService : IActividadService
@@ -23,7 +23,7 @@ public class ActividadService : IActividadService
         _context = context;
     }
 
-    public async Task<List<ActividadDto>> ObtenerTodasAsync()
+    public async Task<List<ActividadDto>> ObtenerTodasActividadesAsync()
     {
         var actividades = await _context.Actividades
             .Where(a => a.FechaEliminacion == null)
@@ -43,7 +43,7 @@ public class ActividadService : IActividadService
         return actividades;
     }
 
-    public async Task<ActividadDto?> ObtenerPorIdAsync(int id)
+    public async Task<ActividadDto?> ObtenerActividadPorIdAsync(int id)
     {
         var actividad = await _context.Actividades
             .Where(a => a.Id == id && a.FechaEliminacion == null)
@@ -61,7 +61,7 @@ public class ActividadService : IActividadService
         return actividad;
     }
 
-    public async Task<ActividadDto> CrearAsync(CrearActividadDto dto)
+    public async Task<ActividadDto> CrearActividadAsync(CrearActividadDto dto)
     {
         // Validar nombre
         if (string.IsNullOrWhiteSpace(dto.Nombre))
@@ -121,7 +121,7 @@ public class ActividadService : IActividadService
         };
     }
 
-    public async Task<ActividadDto> ActualizarAsync(int id, ActualizarActividadDto dto)
+    public async Task<ActividadDto> ActualizarActividadAsync(int id, ActualizarActividadDto dto)
     {
         var actividad = await _context.Actividades
             .FirstOrDefaultAsync(a => a.Id == id && a.FechaEliminacion == null);
@@ -184,7 +184,7 @@ public class ActividadService : IActividadService
         };
     }
 
-    public async Task<bool> EliminarAsync(int id)
+    public async Task<bool> EliminarActividadAsync(int id)
     {
         var actividad = await _context.Actividades.FindAsync(id);
 

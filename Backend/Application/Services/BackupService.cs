@@ -1,5 +1,3 @@
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Infrastructure.Data;
@@ -26,118 +24,19 @@ public class BackupService : IBackupService
         _configuration = configuration;
     }
 
-    public async Task<BackupResponseDto> CrearBackupAsync(BackupRequestDto request)
+    public Task<BackupResponseDto> CrearBackupAsync(BackupRequestDto request)
     {
-        try
+        return Task.FromResult(new BackupResponseDto
         {
-            // NOTA: No validamos Directory.Exists porque la ruta está en el contenedor de SQL Server,
-            // no en el filesystem local del backend. SQL Server validará la ruta al ejecutar BACKUP DATABASE.
-
-            // Generar nombre completo del archivo con fecha, hora y extensión
-            var fechaHora = DateTime.Now;
-            var nombreArchivoCompleto = $"{request.NombreArchivo}_{fechaHora:yyyyMMdd_HHmmss}.bak";
-            var rutaCompleta = Path.Combine(request.RutaDestino, nombreArchivoCompleto);
-
-            // Construir el comando SQL para backup
-            var sqlBackup = $@"
-                BACKUP DATABASE [{request.NombreBaseDatos}]
-                TO DISK = @rutaBackup
-                WITH FORMAT,
-                     INIT,
-                     NAME = 'Backup completo - {fechaHora:yyyy-MM-dd HH:mm:ss}',
-                     SKIP,
-                     NOREWIND,
-                     NOUNLOAD,
-                     COMPRESSION,
-                     STATS = 10";
-
-            // Ejecutar el backup usando SQL directo
-            await using var connection = _context.Database.GetDbConnection() as SqlConnection;
-            if (connection == null)
-            {
-                return new BackupResponseDto
-                {
-                    Exitoso = false,
-                    Mensaje = "No se pudo obtener la conexión a SQL Server",
-                    FechaHoraBackup = fechaHora
-                };
-            }
-
-            await connection.OpenAsync();
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = sqlBackup;
-            command.CommandTimeout = 300; // 5 minutos de timeout
-            command.Parameters.Add(new SqlParameter("@rutaBackup", rutaCompleta));
-
-            await command.ExecuteNonQueryAsync();
-
-            // NOTA: No verificamos File.Exists ni obtenemos el tamaño porque el archivo está en el contenedor,
-            // no en el filesystem local. Si ExecuteNonQueryAsync no lanzó excepción, el backup fue exitoso.
-
-            return new BackupResponseDto
-            {
-                Exitoso = true,
-                Mensaje = "Backup creado exitosamente",
-                RutaCompleta = rutaCompleta,
-                FechaHoraBackup = fechaHora,
-                TamanoBytes = null // No podemos obtener el tamaño desde el backend
-            };
-        }
-        catch (SqlException ex)
-        {
-            return new BackupResponseDto
-            {
-                Exitoso = false,
-                Mensaje = $"Error de SQL Server al crear backup: {ex.Message}",
-                FechaHoraBackup = DateTime.Now
-            };
-        }
-        catch (Exception ex)
-        {
-            return new BackupResponseDto
-            {
-                Exitoso = false,
-                Mensaje = $"Error al crear backup: {ex.Message}",
-                FechaHoraBackup = DateTime.Now
-            };
-        }
+            Exitoso = false,
+            Mensaje = "El backup manual no está disponible en modo cloud (Supabase). Los backups son gestionados automáticamente por Supabase.",
+            FechaHoraBackup = DateTime.Now
+        });
     }
 
-    public async Task<List<string>> ObtenerBasesDatosDisponiblesAsync()
+    public Task<List<string>> ObtenerBasesDatosDisponiblesAsync()
     {
-        try
-        {
-            var basesDatos = new List<string>();
-
-            await using var connection = _context.Database.GetDbConnection() as SqlConnection;
-            if (connection == null)
-            {
-                return basesDatos;
-            }
-
-            await connection.OpenAsync();
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT name
-                FROM sys.databases
-                WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb')
-                AND state_desc = 'ONLINE'
-                ORDER BY name";
-
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                basesDatos.Add(reader.GetString(0));
-            }
-
-            return basesDatos;
-        }
-        catch
-        {
-            return new List<string>();
-        }
+        return Task.FromResult(new List<string> { "postgres" });
     }
 
     public async Task<(bool exito, byte[]? datos, string? nombreArchivo, string? mensajeError)> ObtenerArchivoBackupAsync(string rutaCompleta)
@@ -253,85 +152,13 @@ public class BackupService : IBackupService
         return $"{tamano:0.##} {sufijos[orden]}";
     }
 
-    public async Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request)
+    public Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request)
     {
-        try
+        return Task.FromResult(new RestoreResponseDto
         {
-            var fechaHora = DateTime.Now;
-
-            // Validar que el archivo de backup exista (traducir ruta Docker a host)
-            string rutaEnHost = request.RutaBackup;
-            if (request.RutaBackup.StartsWith("/backups/"))
-            {
-                rutaEnHost = request.RutaBackup.Replace("/backups/", "/Users/Shared/Backups/");
-            }
-
-            if (!File.Exists(rutaEnHost))
-            {
-                return new RestoreResponseDto
-                {
-                    Exitoso = false,
-                    Mensaje = "El archivo de backup no existe",
-                    FechaHoraRestore = fechaHora
-                };
-            }
-
-            // IMPORTANTE: Necesitamos usar la ruta del contenedor Docker, no la del host
-            string rutaBackupDocker = request.RutaBackup;
-
-            // Construir el comando SQL para restaurar
-            // NOTA: Usamos WITH REPLACE para sobrescribir la base de datos existente
-            //       y RECOVERY para dejar la BD lista para usar
-            var sqlRestore = $@"
-                USE master;
-                ALTER DATABASE [{request.NombreBaseDatos}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                RESTORE DATABASE [{request.NombreBaseDatos}]
-                FROM DISK = @rutaBackup
-                WITH REPLACE,
-                     RECOVERY,
-                     STATS = 10;
-                ALTER DATABASE [{request.NombreBaseDatos}] SET MULTI_USER;";
-
-            // Usar una conexión directa a master (no el DbContext)
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
-            var builder = new SqlConnectionStringBuilder(connectionString)
-            {
-                InitialCatalog = "master" // Conectar a master para poder manipular otras BDs
-            };
-
-            await using var connection = new SqlConnection(builder.ConnectionString);
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
-            command.CommandText = sqlRestore;
-            command.CommandTimeout = 600; // 10 minutos para restore
-            command.Parameters.Add(new SqlParameter("@rutaBackup", rutaBackupDocker));
-
-            await command.ExecuteNonQueryAsync();
-
-            return new RestoreResponseDto
-            {
-                Exitoso = true,
-                Mensaje = $"Base de datos '{request.NombreBaseDatos}' restaurada exitosamente",
-                FechaHoraRestore = fechaHora
-            };
-        }
-        catch (SqlException ex)
-        {
-            return new RestoreResponseDto
-            {
-                Exitoso = false,
-                Mensaje = $"Error de SQL Server al restaurar backup: {ex.Message}",
-                FechaHoraRestore = DateTime.Now
-            };
-        }
-        catch (Exception ex)
-        {
-            return new RestoreResponseDto
-            {
-                Exitoso = false,
-                Mensaje = $"Error al restaurar backup: {ex.Message}",
-                FechaHoraRestore = DateTime.Now
-            };
-        }
+            Exitoso = false,
+            Mensaje = "La restauración manual no está disponible en modo cloud (Supabase). Los restores deben realizarse desde el panel de Supabase.",
+            FechaHoraRestore = DateTime.Now
+        });
     }
 }

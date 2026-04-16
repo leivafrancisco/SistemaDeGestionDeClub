@@ -8,11 +8,11 @@ namespace SistemaDeGestionDeClub.Application.Services;
 
 public interface IUsuarioService
 {
-    Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto, string? currentUserRole = null);
-    Task<UsuarioDetalleDto?> ObtenerPorIdAsync(int id);
-    Task<List<UsuarioDetalleDto>> ObtenerTodosAsync(string? rol = null, bool? estaActivo = null);
-    Task<UsuarioDetalleDto?> ActualizarAsync(int id, ActualizarUsuarioDto dto);
-    Task<bool> DesactivarAsync(int id);
+    Task<UsuarioDetalleDto?> CrearUsuarioAsync(CrearUsuarioDto dto, string? currentUserRole = null);
+    Task<UsuarioDetalleDto?> ObtenerUsuarioPorIdAsync(int id);
+    Task<List<UsuarioDetalleDto>> ObtenerTodosUsuariosAsync(string? rol = null, bool? estaActivo = null);
+    Task<UsuarioDetalleDto?> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto);
+    Task<bool> DesactivarUsuarioAsync(int id);
 }
 
 public class UsuarioService : IUsuarioService
@@ -24,7 +24,7 @@ public class UsuarioService : IUsuarioService
         _context = context;
     }
 
-    public async Task<UsuarioDetalleDto?> CrearAsync(CrearUsuarioDto dto, string? currentUserRole = null)
+    public async Task<UsuarioDetalleDto?> CrearUsuarioAsync(CrearUsuarioDto dto, string? currentUserRole = null)
     {
         // Validar permisos de creación según el rol del usuario actual
         var rolACrear = dto.Rol.ToLower();
@@ -141,7 +141,7 @@ public class UsuarioService : IUsuarioService
         };
     }
 
-    public async Task<UsuarioDetalleDto?> ObtenerPorIdAsync(int id)
+    public async Task<UsuarioDetalleDto?> ObtenerUsuarioPorIdAsync(int id)
     {
         var usuario = await _context.Usuarios
             .Include(u => u.Persona)
@@ -169,7 +169,7 @@ public class UsuarioService : IUsuarioService
         };
     }
 
-    public async Task<List<UsuarioDetalleDto>> ObtenerTodosAsync(string? rol = null, bool? estaActivo = null)
+    public async Task<List<UsuarioDetalleDto>> ObtenerTodosUsuariosAsync(string? rol = null, bool? estaActivo = null)
     {
         var query = _context.Usuarios
             .Include(u => u.Persona)
@@ -208,7 +208,7 @@ public class UsuarioService : IUsuarioService
         }).ToList();
     }
 
-    public async Task<UsuarioDetalleDto?> ActualizarAsync(int id, ActualizarUsuarioDto dto)
+    public async Task<UsuarioDetalleDto?> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto)
     {
         var usuario = await _context.Usuarios
             .Include(u => u.Persona)
@@ -270,7 +270,7 @@ public class UsuarioService : IUsuarioService
         };
     }
 
-    public async Task<bool> DesactivarAsync(int id)
+    public async Task<bool> DesactivarUsuarioAsync(int id)
     {
         var usuario = await _context.Usuarios
             .FirstOrDefaultAsync(u => u.Id == id && u.FechaEliminacion == null);

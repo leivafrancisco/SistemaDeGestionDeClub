@@ -25,7 +25,7 @@ public class ActividadesController : ControllerBase
     {
         try
         {
-            var actividades = await _actividadService.ObtenerTodasAsync();
+            var actividades = await _actividadService.ObtenerTodasActividadesAsync();
             return Ok(actividades);
         }
         catch (Exception ex)
@@ -42,7 +42,7 @@ public class ActividadesController : ControllerBase
     {
         try
         {
-            var actividad = await _actividadService.ObtenerPorIdAsync(id);
+            var actividad = await _actividadService.ObtenerActividadPorIdAsync(id);
 
             if (actividad == null)
             {
@@ -66,7 +66,7 @@ public class ActividadesController : ControllerBase
     {
         try
         {
-            var actividad = await _actividadService.CrearAsync(dto);
+            var actividad = await _actividadService.CrearActividadAsync(dto);
             return CreatedAtAction(nameof(ObtenerPorId), new { id = actividad.Id }, actividad);
         }
         catch (InvalidOperationException ex)
@@ -88,7 +88,7 @@ public class ActividadesController : ControllerBase
     {
         try
         {
-            var actividad = await _actividadService.ActualizarAsync(id, dto);
+            var actividad = await _actividadService.ActualizarActividadAsync(id, dto);
             return Ok(actividad);
         }
         catch (InvalidOperationException ex)
@@ -115,7 +115,7 @@ public class ActividadesController : ControllerBase
     {
         try
         {
-            var resultado = await _actividadService.EliminarAsync(id);
+            var resultado = await _actividadService.EliminarActividadAsync(id);
 
             if (!resultado)
             {

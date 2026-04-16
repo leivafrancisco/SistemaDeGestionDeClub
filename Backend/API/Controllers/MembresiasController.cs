@@ -45,7 +45,7 @@ public class MembresiasController : ControllerBase
                 PageSize = pageSize
             };
 
-            var membresias = await _membresiaService.ObtenerTodosAsync(filtros);
+            var membresias = await _membresiaService.ObtenerTodasMembresiasAsync(filtros);
             return Ok(membresias);
         }
         catch (Exception ex)
@@ -62,7 +62,7 @@ public class MembresiasController : ControllerBase
     {
         try
         {
-            var membresia = await _membresiaService.ObtenerPorIdAsync(id);
+            var membresia = await _membresiaService.ObtenerMembresiaPorIdAsync(id);
 
             if (membresia == null)
             {
@@ -86,7 +86,7 @@ public class MembresiasController : ControllerBase
     {
         try
         {
-            var membresia = await _membresiaService.CrearAsync(dto);
+            var membresia = await _membresiaService.CrearMembresiaAsync(dto);
             return CreatedAtAction(nameof(ObtenerPorId), new { id = membresia.Id }, membresia);
         }
         catch (InvalidOperationException ex)
@@ -111,7 +111,7 @@ public class MembresiasController : ControllerBase
     {
         try
         {
-            var membresia = await _membresiaService.ActualizarAsync(id, dto);
+            var membresia = await _membresiaService.ActualizarMembresiaAsync(id, dto);
             return Ok(membresia);
         }
         catch (InvalidOperationException ex)
@@ -133,7 +133,7 @@ public class MembresiasController : ControllerBase
     {
         try
         {
-            var resultado = await _membresiaService.EliminarAsync(id);
+            var resultado = await _membresiaService.EliminarMembresiaAsync(id);
 
             if (!resultado)
             {
@@ -160,7 +160,7 @@ public class MembresiasController : ControllerBase
     {
         try
         {
-            var total = await _membresiaService.ContarTotalAsync();
+            var total = await _membresiaService.ContarTotalMembresiasAsync();
             return Ok(new { total });
         }
         catch (Exception ex)

@@ -29,7 +29,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var socios = await _socioService.ObtenerTodosAsync(search, estaActivo, page, pageSize);
+            var socios = await _socioService.ObtenerTodosSociosAsync(search, estaActivo, page, pageSize);
             return Ok(socios);
         }
         catch (Exception ex)
@@ -46,7 +46,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var socio = await _socioService.ObtenerPorIdAsync(id);
+            var socio = await _socioService.ObtenerSocioPorIdAsync(id);
             
             if (socio == null)
             {
@@ -69,7 +69,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var socio = await _socioService.ObtenerPorNumeroSocioAsync(numeroSocio);
+            var socio = await _socioService.ObtenerSocioPorNumeroAsync(numeroSocio);
             
             if (socio == null)
             {
@@ -94,7 +94,7 @@ public class SociosController : ControllerBase
         try
         {
             Console.WriteLine($"[DEBUG] Crear Socio - Nombre: {dto.Nombre}, Apellido: {dto.Apellido}, Email: {dto.Email}, DNI: {dto.Dni ?? "NULL"}, FechaNacimiento: {dto.FechaNacimiento?.ToString() ?? "NULL"}");
-            var socio = await _socioService.CrearAsync(dto);
+            var socio = await _socioService.CrearSocioAsync(dto);
             return Ok(socio);
         }
         catch (InvalidOperationException ex)
@@ -116,7 +116,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var socio = await _socioService.ActualizarAsync(id, dto);
+            var socio = await _socioService.ActualizarSocioAsync(id, dto);
             return Ok(socio);
         }
         catch (InvalidOperationException ex)
@@ -138,7 +138,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var resultado = await _socioService.DesactivarAsync(id);
+            var resultado = await _socioService.DesactivarSocioAsync(id);
             
             if (!resultado)
             {
@@ -161,7 +161,7 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var total = await _socioService.ContarTotalAsync();
+            var total = await _socioService.ContarTotalSociosAsync();
             return Ok(new { total });
         }
         catch (Exception ex)
