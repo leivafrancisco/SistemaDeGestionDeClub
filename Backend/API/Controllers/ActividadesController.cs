@@ -58,10 +58,10 @@ public class ActividadesController : ControllerBase
     }
 
     /// <summary>
-    /// Crear una nueva actividad (solo superadmin y admin)
+    /// Crear una nueva actividad (solo superadmin)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "superadmin,admin")]
+    [Authorize(Roles = "superadmin")]
     public async Task<ActionResult<ActividadDto>> Crear([FromBody] CrearActividadDto dto)
     {
         try
@@ -80,10 +80,10 @@ public class ActividadesController : ControllerBase
     }
 
     /// <summary>
-    /// Actualizar una actividad existente (solo superadmin y admin)
+    /// Actualizar una actividad existente (solo superadmin)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "superadmin,admin")]
+    [Authorize(Roles = "superadmin")]
     public async Task<ActionResult<ActividadDto>> Actualizar(int id, [FromBody] ActualizarActividadDto dto)
     {
         try
@@ -107,10 +107,10 @@ public class ActividadesController : ControllerBase
     }
 
     /// <summary>
-    /// Eliminar (soft delete) una actividad (solo superadmin y admin)
+    /// Eliminar (soft delete) una actividad (solo superadmin)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "superadmin,admin")]
+    [Authorize(Roles = "superadmin")]
     public async Task<ActionResult> Eliminar(int id)
     {
         try
