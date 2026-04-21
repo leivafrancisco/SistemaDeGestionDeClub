@@ -6,7 +6,7 @@ Sistema completo de gestión para clubes deportivos con backend en ASP.NET Core 
 
 ### Backend
 - **Framework**: ASP.NET Core 8 Web API
-- **Base de datos**: SQL Server 2022
+- **Base de datos**: Supabase - Postgres SQL 
 - **ORM**: Entity Framework Core 8
 - **Autenticación**: JWT Bearer
 - **Patrón**: Clean Architecture
@@ -14,7 +14,7 @@ Sistema completo de gestión para clubes deportivos con backend en ASP.NET Core 
 ### Frontend
 - **Framework**: Next.js 14 (App Router)
 - **UI**: React 18 + TypeScript
-- **Estilos**: TailwindCSS
+- **Estilos**: Tailwind CSS
 - **HTTP Client**: Axios
 - **Validación**: Zod + React Hook Form
 
