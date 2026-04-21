@@ -3,6 +3,8 @@ namespace SistemaDeGestionDeClub.Application.DTOs;
 public class PagoDto
 {
     public int Id { get; set; }
+    public int IdCuota { get; set; }
+    public int NumeroCuota { get; set; }
     public int IdMembresia { get; set; }
     public string PeriodoMembresia { get; set; } = string.Empty;
     public int IdSocio { get; set; }
@@ -19,7 +21,7 @@ public class PagoDto
 
 public class RegistrarPagoDto
 {
-    public int IdMembresia { get; set; }
+    public int IdCuota { get; set; }
     public int IdMetodoPago { get; set; }
     public decimal Monto { get; set; }
     public DateTime? FechaPago { get; set; } // Opcional, default: hoy

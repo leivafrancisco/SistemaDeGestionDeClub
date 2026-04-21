@@ -24,6 +24,7 @@ public class ClubDbContext : DbContext
     public DbSet<MembresiaActividad> MembresiaActividades { get; set; }
     public DbSet<MetodoPago> MetodosPago { get; set; }
     public DbSet<Pago> Pagos { get; set; }
+    public DbSet<Cuota> Cuotas { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
     public DbSet<Auditoria> Auditorias { get; set; }
     
@@ -194,7 +195,7 @@ public class ClubDbContext : DbContext
             entity.ToTable("pagos");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IdMembresia).HasColumnName("id_membresia");
+            entity.Property(e => e.IdCuota).HasColumnName("id_cuota");
             entity.Property(e => e.IdMetodoPago).HasColumnName("id_metodo_pago");
             entity.Property(e => e.IdUsuarioProcesa).HasColumnName("id_usuario_procesa");
             entity.Property(e => e.Monto).HasColumnName("monto").HasColumnType("decimal(10, 2)").IsRequired();
@@ -202,21 +203,48 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
             entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
-            
-            entity.HasOne(e => e.Membresia)
-                .WithMany(m => m.Pagos)
-                .HasForeignKey(e => e.IdMembresia)
+
+            entity.HasOne(e => e.Cuota)
+                .WithMany(c => c.Pagos)
+                .HasForeignKey(e => e.IdCuota)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.HasOne(e => e.MetodoPago)
                 .WithMany(mp => mp.Pagos)
                 .HasForeignKey(e => e.IdMetodoPago)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.HasOne(e => e.UsuarioProcesa)
                 .WithMany(u => u.PagosProcesados)
                 .HasForeignKey(e => e.IdUsuarioProcesa)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configuración de Cuota
+        modelBuilder.Entity<Cuota>(entity =>
+        {
+            entity.ToTable("cuotas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IdMembresia).HasColumnName("id_membresia");
+            entity.Property(e => e.NumeroCuota).HasColumnName("numero_cuota").IsRequired();
+            entity.Property(e => e.Monto).HasColumnName("monto").HasColumnType("decimal(10, 2)").IsRequired();
+            entity.Property(e => e.FechaVencimiento).HasColumnName("fecha_vencimiento").IsRequired();
+            entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue(CuotaEstado.Pendiente);
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
+
+            entity.Ignore(e => e.EstaPagada);
+
+            entity.HasIndex(e => new { e.IdMembresia, e.NumeroCuota }).IsUnique();
+            entity.HasIndex(e => e.FechaVencimiento);
+            entity.HasIndex(e => e.Estado);
+
+            entity.HasOne(e => e.Membresia)
+                .WithMany(m => m.Cuotas)
+                .HasForeignKey(e => e.IdMembresia)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         
         // Configuración de Asistencia

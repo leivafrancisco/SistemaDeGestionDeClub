@@ -22,11 +22,13 @@ public class PagoService : IPagoService
 {
     private readonly ClubDbContext _context;
     private readonly IMembresiaService _membresiaService;
+    private readonly ICuotaService _cuotaService;
 
-    public PagoService(ClubDbContext context, IMembresiaService membresiaService)
+    public PagoService(ClubDbContext context, IMembresiaService membresiaService, ICuotaService cuotaService)
     {
         _context = context;
         _membresiaService = membresiaService;
+        _cuotaService = cuotaService;
     }
 
     public async Task<List<PagoDto>> ObtenerTodosPagosAsync(FiltrosPagosDto? filtros = null)
@@ -34,40 +36,30 @@ public class PagoService : IPagoService
         filtros ??= new FiltrosPagosDto();
 
         var query = _context.Pagos
-            .Include(p => p.Membresia)
-                .ThenInclude(m => m.Socio)
-                    .ThenInclude(s => s.Persona)
+            .Include(p => p.Cuota)
+                .ThenInclude(c => c.Membresia)
+                    .ThenInclude(m => m.Socio)
+                        .ThenInclude(s => s.Persona)
             .Include(p => p.MetodoPago)
             .Include(p => p.UsuarioProcesa)
                 .ThenInclude(u => u!.Persona)
             .Where(p => p.FechaEliminacion == null)
             .AsQueryable();
 
-        // Filtros
         if (filtros.IdMembresia.HasValue)
-        {
-            query = query.Where(p => p.IdMembresia == filtros.IdMembresia.Value);
-        }
+            query = query.Where(p => p.Cuota.IdMembresia == filtros.IdMembresia.Value);
 
         if (filtros.IdSocio.HasValue)
-        {
-            query = query.Where(p => p.Membresia.IdSocio == filtros.IdSocio.Value);
-        }
+            query = query.Where(p => p.Cuota.Membresia.IdSocio == filtros.IdSocio.Value);
 
         if (filtros.IdMetodoPago.HasValue)
-        {
             query = query.Where(p => p.IdMetodoPago == filtros.IdMetodoPago.Value);
-        }
 
         if (filtros.FechaDesde.HasValue)
-        {
             query = query.Where(p => p.FechaPago >= filtros.FechaDesde.Value);
-        }
 
         if (filtros.FechaHasta.HasValue)
-        {
             query = query.Where(p => p.FechaPago <= filtros.FechaHasta.Value);
-        }
 
         var pagos = await query
             .OrderByDescending(p => p.FechaPago)
@@ -76,15 +68,16 @@ public class PagoService : IPagoService
             .Take(filtros.PageSize)
             .ToListAsync();
 
-        return pagos.Select(p => MapearADto(p)).ToList();
+        return pagos.Select(MapearADto).ToList();
     }
 
     public async Task<PagoDto?> ObtenerPagoPorIdAsync(int id)
     {
         var pago = await _context.Pagos
-            .Include(p => p.Membresia)
-                .ThenInclude(m => m.Socio)
-                    .ThenInclude(s => s.Persona)
+            .Include(p => p.Cuota)
+                .ThenInclude(c => c.Membresia)
+                    .ThenInclude(m => m.Socio)
+                        .ThenInclude(s => s.Persona)
             .Include(p => p.MetodoPago)
             .Include(p => p.UsuarioProcesa)
                 .ThenInclude(u => u!.Persona)
@@ -96,48 +89,31 @@ public class PagoService : IPagoService
 
     public async Task<ComprobantePagoDto> RegistrarPagoAsync(RegistrarPagoDto dto, int idUsuario)
     {
-        // Validar que la membresía existe
-        var membresia = await _context.Membresias
-            .Include(m => m.Socio)
-                .ThenInclude(s => s.Persona)
-            .Include(m => m.MembresiaActividades)
+        var cuota = await _context.Cuotas
+            .Include(c => c.Membresia)
+                .ThenInclude(m => m.Socio)
+                    .ThenInclude(s => s.Persona)
+            .Include(c => c.Membresia.MembresiaActividades)
                 .ThenInclude(ma => ma.Actividad)
-            .Include(m => m.Pagos)
-            .FirstOrDefaultAsync(m => m.Id == dto.IdMembresia && m.FechaEliminacion == null);
+            .Include(c => c.Pagos)
+            .FirstOrDefaultAsync(c => c.Id == dto.IdCuota && c.FechaEliminacion == null);
 
-        if (membresia == null)
-        {
-            throw new InvalidOperationException("Membresía no encontrada");
-        }
+        if (cuota == null)
+            throw new InvalidOperationException("Cuota no encontrada");
 
-        // Validar que el método de pago existe
+        if (cuota.Estado == CuotaEstado.Pagada)
+            throw new InvalidOperationException("La cuota ya está pagada");
+
         var metodoPago = await _context.MetodosPago.FindAsync(dto.IdMetodoPago);
         if (metodoPago == null)
-        {
             throw new InvalidOperationException("Método de pago no encontrado");
-        }
 
-        // Validar que el monto sea positivo
         if (dto.Monto <= 0)
-        {
             throw new InvalidOperationException("El monto debe ser mayor a cero");
-        }
 
-        // Calcular saldo actual
-        var totalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
-        var totalPagado = membresia.Pagos.Where(p => p.FechaEliminacion == null).Sum(p => p.Monto);
-        var saldoActual = totalCargado - totalPagado;
-
-        // Validar que no se pague de más
-        if (dto.Monto > saldoActual)
-        {
-            throw new InvalidOperationException($"El monto excede el saldo pendiente de ${saldoActual:N2}. No se permite sobrepago.");
-        }
-
-        // Crear el pago
         var pago = new Pago
         {
-            IdMembresia = dto.IdMembresia,
+            IdCuota = dto.IdCuota,
             IdMetodoPago = dto.IdMetodoPago,
             IdUsuarioProcesa = idUsuario,
             Monto = dto.Monto,
@@ -149,56 +125,48 @@ public class PagoService : IPagoService
         _context.Pagos.Add(pago);
         await _context.SaveChangesAsync();
 
-        Console.WriteLine($"[DEBUG PagoService] Pago creado con ID: {pago.Id}, Monto: {pago.Monto}");
+        await _cuotaService.MarcarCuotaPagadaAsync(dto.IdCuota);
+        await _membresiaService.ActualizarEstadoDespuesDePagoAsync(cuota.IdMembresia);
 
-        // Actualizar el estado de la membresía después de registrar el pago
-        await _membresiaService.ActualizarEstadoDespuesDePagoAsync(dto.IdMembresia);
-
-        // Generar y retornar el comprobante
-        var comprobante = await GenerarComprobanteAsync(pago.Id);
-        Console.WriteLine($"[DEBUG PagoService] Comprobante generado - IdPago: {comprobante.IdPago}, Número: {comprobante.NumeroComprobante}");
-
-        return comprobante;
+        return await GenerarComprobanteAsync(pago.Id);
     }
 
     public async Task<ComprobantePagoDto> GenerarComprobanteAsync(int idPago)
     {
         var pago = await _context.Pagos
-            .Include(p => p.Membresia)
-                .ThenInclude(m => m.Socio)
-                    .ThenInclude(s => s.Persona)
-            .Include(p => p.Membresia.MembresiaActividades)
+            .Include(p => p.Cuota)
+                .ThenInclude(c => c.Membresia)
+                    .ThenInclude(m => m.Socio)
+                        .ThenInclude(s => s.Persona)
+            .Include(p => p.Cuota.Membresia.MembresiaActividades)
                 .ThenInclude(ma => ma.Actividad)
-            .Include(p => p.Membresia.Pagos)
+            .Include(p => p.Cuota.Membresia.Cuotas)
+                .ThenInclude(c => c.Pagos)
             .Include(p => p.MetodoPago)
             .Include(p => p.UsuarioProcesa)
                 .ThenInclude(u => u!.Persona)
             .FirstOrDefaultAsync(p => p.Id == idPago && p.FechaEliminacion == null);
 
         if (pago == null)
-        {
             throw new InvalidOperationException("Pago no encontrado");
-        }
 
-        var membresia = pago.Membresia;
+        var membresia = pago.Cuota.Membresia;
         var totalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
 
-        // Calcular total pagado ANTES de este pago
-        var totalPagadoAntes = membresia.Pagos
+        var totalPagadoAntes = membresia.Cuotas
+            .Where(c => c.FechaEliminacion == null)
+            .SelectMany(c => c.Pagos)
             .Where(p => p.FechaEliminacion == null && p.Id != idPago)
             .Sum(p => p.Monto);
 
-        // Calcular total pagado DESPUÉS de este pago (incluyéndolo)
-        var totalPagadoDespues = membresia.Pagos
+        var totalPagadoDespues = membresia.Cuotas
+            .Where(c => c.FechaEliminacion == null)
+            .SelectMany(c => c.Pagos)
             .Where(p => p.FechaEliminacion == null)
             .Sum(p => p.Monto);
 
         var nuevoSaldo = totalCargado - totalPagadoDespues;
-
-        // Generar número de comprobante: PAG-XXXXXX-AAAA
         var numeroComprobante = $"PAG-{idPago:D6}-{pago.FechaPago.Year}";
-
-        // Formato del período usando las fechas
         var periodoMembresia = $"{membresia.FechaInicio:dd/MM/yyyy} - {membresia.FechaFin:dd/MM/yyyy}";
 
         return new ComprobantePagoDto
@@ -206,25 +174,17 @@ public class PagoService : IPagoService
             IdPago = pago.Id,
             NumeroComprobante = numeroComprobante,
             FechaEmision = pago.FechaCreacion,
-
-            // Datos del Socio
             NumeroSocio = membresia.Socio.NumeroSocio,
             NombreSocio = membresia.Socio.Persona.NombreCompleto,
-
-            // Datos de la Membresía
             PeriodoMembresia = periodoMembresia,
             TotalMembresia = totalCargado,
             TotalPagadoAntes = totalPagadoAntes,
             MontoPago = pago.Monto,
             NuevoSaldo = nuevoSaldo,
             EstaPaga = nuevoSaldo <= 0,
-
-            // Datos del Pago
             MetodoPago = pago.MetodoPago.Nombre,
             FechaPago = pago.FechaPago,
             UsuarioProcesa = pago.UsuarioProcesa?.Persona?.NombreCompleto ?? "Sistema",
-
-            // Detalle de Actividades
             Actividades = membresia.MembresiaActividades.Select(ma => new ActividadComprobanteDto
             {
                 Nombre = ma.Actividad.Nombre,
@@ -238,13 +198,14 @@ public class PagoService : IPagoService
         var pago = await _context.Pagos.FindAsync(id);
 
         if (pago == null || pago.FechaEliminacion != null)
-        {
             return false;
-        }
 
-        // Soft delete
+        var idCuota = pago.IdCuota;
+
         pago.FechaEliminacion = DateTime.Now;
         await _context.SaveChangesAsync();
+
+        await _cuotaService.RevertirCuotaPagadaAsync(idCuota);
 
         return true;
     }
@@ -256,14 +217,10 @@ public class PagoService : IPagoService
             .AsQueryable();
 
         if (fechaDesde.HasValue)
-        {
             query = query.Where(p => p.FechaPago >= fechaDesde.Value);
-        }
 
         if (fechaHasta.HasValue)
-        {
             query = query.Where(p => p.FechaPago <= fechaHasta.Value);
-        }
 
         return await query.SumAsync(p => p.Monto);
     }
@@ -275,7 +232,7 @@ public class PagoService : IPagoService
         {
             Id = m.Id,
             Nombre = m.Nombre,
-            EstaActivo = true // Por defecto todos están activos, ya que la entidad no tiene este campo
+            EstaActivo = true
         }).ToList();
     }
 
@@ -285,55 +242,35 @@ public class PagoService : IPagoService
         var primerDiaMes = new DateTime(hoy.Year, hoy.Month, 1);
         var ultimoDiaMes = primerDiaMes.AddMonths(1).AddDays(-1);
 
-        // Query base de pagos en el período especificado
         var queryPeriodo = _context.Pagos
             .Include(p => p.MetodoPago)
             .Where(p => p.FechaEliminacion == null)
             .AsQueryable();
 
         if (fechaDesde.HasValue)
-        {
             queryPeriodo = queryPeriodo.Where(p => p.FechaPago >= fechaDesde.Value);
-        }
 
         if (fechaHasta.HasValue)
-        {
             queryPeriodo = queryPeriodo.Where(p => p.FechaPago <= fechaHasta.Value);
-        }
 
         var pagosPeriodo = await queryPeriodo.ToListAsync();
-
-        // Total recaudado en el período
         var totalRecaudado = pagosPeriodo.Sum(p => p.Monto);
 
-        // Total pagos hoy
         var totalPagosHoy = await _context.Pagos
             .Where(p => p.FechaEliminacion == null && p.FechaPago.Date == hoy)
             .SumAsync(p => p.Monto);
 
-        // Total pagos del mes actual
         var totalPagosMes = await _context.Pagos
             .Where(p => p.FechaEliminacion == null &&
                         p.FechaPago >= primerDiaMes &&
                         p.FechaPago <= ultimoDiaMes)
             .SumAsync(p => p.Monto);
 
-        // Total pendiente (saldo de todas las membresías impagas)
-        var membresias = await _context.Membresias
-            .Include(m => m.MembresiaActividades)
-            .Include(m => m.Pagos)
-            .Where(m => m.FechaEliminacion == null)
-            .ToListAsync();
+        // Deuda pendiente: cuotas no pagadas
+        var totalPendiente = await _context.Cuotas
+            .Where(c => c.FechaEliminacion == null && c.Estado != CuotaEstado.Pagada)
+            .SumAsync(c => c.Monto);
 
-        var totalPendiente = membresias.Sum(m =>
-        {
-            var totalCargado = m.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
-            var totalPagado = m.Pagos.Where(p => p.FechaEliminacion == null).Sum(p => p.Monto);
-            var saldo = totalCargado - totalPagado;
-            return saldo > 0 ? saldo : 0;
-        });
-
-        // Pagos por método de pago
         var pagosPorMetodo = pagosPeriodo
             .GroupBy(p => p.MetodoPago.Nombre)
             .Select(g => new PagoPorMetodoDto
@@ -345,7 +282,6 @@ public class PagoService : IPagoService
             .OrderByDescending(x => x.Total)
             .ToList();
 
-        // Pagos por día
         var pagosPorDia = pagosPeriodo
             .GroupBy(p => p.FechaPago.Date)
             .Select(g => new PagoPorDiaDto
@@ -368,18 +304,21 @@ public class PagoService : IPagoService
         };
     }
 
-    private PagoDto MapearADto(Pago pago)
+    private static PagoDto MapearADto(Pago pago)
     {
-        var periodoMembresia = $"{pago.Membresia.FechaInicio:dd/MM/yyyy} - {pago.Membresia.FechaFin:dd/MM/yyyy}";
+        var membresia = pago.Cuota.Membresia;
+        var periodoMembresia = $"{membresia.FechaInicio:dd/MM/yyyy} - {membresia.FechaFin:dd/MM/yyyy}";
 
         return new PagoDto
         {
             Id = pago.Id,
-            IdMembresia = pago.IdMembresia,
+            IdCuota = pago.IdCuota,
+            NumeroCuota = pago.Cuota.NumeroCuota,
+            IdMembresia = membresia.Id,
             PeriodoMembresia = periodoMembresia,
-            IdSocio = pago.Membresia.IdSocio,
-            NumeroSocio = pago.Membresia.Socio.NumeroSocio,
-            NombreSocio = pago.Membresia.Socio.Persona.NombreCompleto,
+            IdSocio = membresia.IdSocio,
+            NumeroSocio = membresia.Socio.NumeroSocio,
+            NombreSocio = membresia.Socio.Persona.NombreCompleto,
             IdMetodoPago = pago.IdMetodoPago,
             MetodoPagoNombre = pago.MetodoPago.Nombre,
             IdUsuarioProcesa = pago.IdUsuarioProcesa,
