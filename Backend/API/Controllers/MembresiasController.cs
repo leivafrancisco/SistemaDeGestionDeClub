@@ -95,7 +95,7 @@ public class MembresiasController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Error al crear membresía", error = ex.Message });
+            return StatusCode(500, new { message = "Error al crear membresía", error = ex.InnerException?.Message ?? ex.Message });
         }
     }
 
