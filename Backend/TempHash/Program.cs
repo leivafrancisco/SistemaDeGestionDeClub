@@ -1,7 +1,7 @@
 using BCrypt.Net;
 
 // Genera hash para la contraseña que quieras usar
-string password = "admin123";  // Cambia esto por tu contraseña real
+string password = "superadmin123";  // Cambia esto por tu contraseña real
 string hash = BCrypt.Net.BCrypt.HashPassword(password);
 
 Console.WriteLine("===========================================");

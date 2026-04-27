@@ -53,7 +53,8 @@ public class AsistenciaService : IAsistenciaService
         var membresiaActiva = await _context.Membresias
             .Include(m => m.MembresiaActividades)
                 .ThenInclude(ma => ma.Actividad)
-            .Include(m => m.Pagos)  // Incluir pagos para calcular el saldo correctamente
+            .Include(m => m.Cuotas)  // Incluir cuotas y pagos para calcular el saldo correctamente
+                .ThenInclude(c => c.Pagos)
             .Where(m =>
                 m.IdSocio == socio.Id &&
                 m.FechaEliminacion == null &&
