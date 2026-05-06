@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Infrastructure.Data;
@@ -17,81 +18,91 @@ public class BackupService : IBackupService
 {
     private readonly ClubDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly string _backupDirectory;
 
     public BackupService(ClubDbContext context, IConfiguration configuration)
     {
         _context = context;
         _configuration = configuration;
+        _backupDirectory = configuration["BackupDirectory"] ?? "/var/backups";
     }
 
-    public Task<BackupResponseDto> CrearBackupAsync(BackupRequestDto request)
+    public async Task<BackupResponseDto> CrearBackupAsync(BackupRequestDto request)
     {
-        return Task.FromResult(new BackupResponseDto
+        try
         {
-            Exitoso = false,
-            Mensaje = "El backup manual no está disponible en modo cloud (Supabase). Los backups son gestionados automáticamente por Supabase.",
-            FechaHoraBackup = DateTime.Now
-        });
+            var directorio = string.IsNullOrWhiteSpace(request.RutaDestino)
+                ? _backupDirectory
+                : request.RutaDestino;
+
+            var nombreArchivo = string.IsNullOrWhiteSpace(request.NombreArchivo)
+                ? $"gestion_club_{DateTime.Now:yyyyMMdd_HHmmss}.bak"
+                : request.NombreArchivo.EndsWith(".bak") ? request.NombreArchivo : $"{request.NombreArchivo}.bak";
+
+            var rutaCompleta = Path.Combine(directorio, nombreArchivo);
+
+            var connectionString = _configuration.GetConnectionString("DefaultConnection")!;
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            using var command = new SqlCommand(
+                $"BACKUP DATABASE [gestion_club] TO DISK = N'{rutaCompleta}' WITH FORMAT, INIT, NAME = N'gestion_club-Full', STATS = 10",
+                connection);
+            command.CommandTimeout = 300;
+            await command.ExecuteNonQueryAsync();
+
+            return new BackupResponseDto
+            {
+                Exitoso = true,
+                Mensaje = $"Backup creado exitosamente: {nombreArchivo}",
+                RutaArchivo = rutaCompleta,
+                NombreArchivo = nombreArchivo,
+                FechaHoraBackup = DateTime.Now
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BackupResponseDto
+            {
+                Exitoso = false,
+                Mensaje = $"Error al crear el backup: {ex.Message}",
+                FechaHoraBackup = DateTime.Now
+            };
+        }
     }
 
     public Task<List<string>> ObtenerBasesDatosDisponiblesAsync()
     {
-        return Task.FromResult(new List<string> { "postgres" });
+        return Task.FromResult(new List<string> { "gestion_club" });
     }
 
     public async Task<(bool exito, byte[]? datos, string? nombreArchivo, string? mensajeError)> ObtenerArchivoBackupAsync(string rutaCompleta)
     {
         try
         {
-            // Validación de seguridad: evitar path traversal
             if (string.IsNullOrWhiteSpace(rutaCompleta))
-            {
                 return (false, null, null, "La ruta del archivo es requerida");
-            }
 
             if (rutaCompleta.Contains(".."))
-            {
                 return (false, null, null, "La ruta contiene caracteres no permitidos");
-            }
 
-            // Validar que sea un archivo .bak
             if (!rutaCompleta.EndsWith(".bak", StringComparison.OrdinalIgnoreCase))
-            {
                 return (false, null, null, "Solo se pueden descargar archivos .bak");
-            }
 
-            // NOTA: Traducir ruta del contenedor Docker a ruta del host Mac
-            // El backup se crea en /backups dentro del contenedor SQL Server,
-            // pero el backend corre en Mac donde ese path está mapeado a /Users/Shared/Backups/
-            string rutaEnHost = rutaCompleta;
-            if (rutaCompleta.StartsWith("/backups/"))
-            {
-                rutaEnHost = rutaCompleta.Replace("/backups/", "/Users/Shared/Backups/");
-            }
+            if (!File.Exists(rutaCompleta))
+                return (false, null, null, $"El archivo no existe: {rutaCompleta}");
 
-            // Verificar que el archivo existe en el host
-            if (!File.Exists(rutaEnHost))
-            {
-                return (false, null, null, $"El archivo de backup no existe en la ruta especificada: {rutaEnHost}");
-            }
-
-            // Leer el archivo
-            byte[] archivoBytes = await File.ReadAllBytesAsync(rutaEnHost);
-            string nombreArchivo = Path.GetFileName(rutaCompleta);
-
-            return (true, archivoBytes, nombreArchivo, null);
+            var datos = await File.ReadAllBytesAsync(rutaCompleta);
+            var nombreArchivo = Path.GetFileName(rutaCompleta);
+            return (true, datos, nombreArchivo, null);
         }
         catch (UnauthorizedAccessException)
         {
-            return (false, null, null, "No tiene permisos para acceder al archivo");
-        }
-        catch (IOException ex)
-        {
-            return (false, null, null, $"Error al leer el archivo: {ex.Message}");
+            return (false, null, null, "Sin permisos para acceder al archivo");
         }
         catch (Exception ex)
         {
-            return (false, null, null, $"Error al obtener el archivo de backup: {ex.Message}");
+            return (false, null, null, $"Error al leer el archivo: {ex.Message}");
         }
     }
 
@@ -101,34 +112,24 @@ public class BackupService : IBackupService
         {
             try
             {
-                // Directorio donde están almacenados los backups en el host Mac
-                string directorioBackups = "/Users/Shared/Backups";
-
-                if (!Directory.Exists(directorioBackups))
-                {
+                if (!Directory.Exists(_backupDirectory))
                     return new List<BackupArchivoDto>();
-                }
 
-                var archivos = Directory.GetFiles(directorioBackups, "*.bak")
-                    .Select(rutaArchivo =>
+                return Directory.GetFiles(_backupDirectory, "*.bak")
+                    .Select(ruta =>
                     {
-                        var fileInfo = new FileInfo(rutaArchivo);
-                        // Convertir la ruta del host Mac a la ruta del contenedor Docker
-                        var rutaDocker = rutaArchivo.Replace("/Users/Shared/Backups/", "/backups/");
-
+                        var info = new FileInfo(ruta);
                         return new BackupArchivoDto
                         {
-                            Nombre = fileInfo.Name,
-                            RutaCompleta = rutaDocker,
-                            FechaCreacion = fileInfo.CreationTime,
-                            TamanoBytes = fileInfo.Length,
-                            TamanoFormateado = FormatearTamano(fileInfo.Length)
+                            Nombre = info.Name,
+                            RutaCompleta = ruta,
+                            FechaCreacion = info.CreationTime,
+                            TamanoBytes = info.Length,
+                            TamanoFormateado = FormatearTamano(info.Length)
                         };
                     })
                     .OrderByDescending(b => b.FechaCreacion)
                     .ToList();
-
-                return archivos;
             }
             catch
             {
@@ -137,28 +138,66 @@ public class BackupService : IBackupService
         });
     }
 
-    private string FormatearTamano(long bytes)
+    public async Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RutaArchivo))
+                return new RestoreResponseDto { Exitoso = false, Mensaje = "La ruta del archivo es requerida", FechaHoraRestore = DateTime.Now };
+
+            if (!File.Exists(request.RutaArchivo))
+                return new RestoreResponseDto { Exitoso = false, Mensaje = $"El archivo no existe: {request.RutaArchivo}", FechaHoraRestore = DateTime.Now };
+
+            // Conectar a master para poder restaurar gestion_club
+            var connectionString = _configuration.GetConnectionString("DefaultConnection")!
+                .Replace("Database=gestion_club", "Database=master")
+                .Replace("database=gestion_club", "Database=master");
+
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Cerrar conexiones activas antes de restaurar
+            using var killCmd = new SqlCommand(
+                "ALTER DATABASE [gestion_club] SET SINGLE_USER WITH ROLLBACK IMMEDIATE",
+                connection);
+            killCmd.CommandTimeout = 60;
+            await killCmd.ExecuteNonQueryAsync();
+
+            using var restoreCmd = new SqlCommand(
+                $"RESTORE DATABASE [gestion_club] FROM DISK = N'{request.RutaArchivo}' WITH REPLACE, STATS = 10",
+                connection);
+            restoreCmd.CommandTimeout = 600;
+            await restoreCmd.ExecuteNonQueryAsync();
+
+            using var multiCmd = new SqlCommand(
+                "ALTER DATABASE [gestion_club] SET MULTI_USER",
+                connection);
+            await multiCmd.ExecuteNonQueryAsync();
+
+            return new RestoreResponseDto
+            {
+                Exitoso = true,
+                Mensaje = "Base de datos restaurada exitosamente",
+                FechaHoraRestore = DateTime.Now
+            };
+        }
+        catch (Exception ex)
+        {
+            return new RestoreResponseDto
+            {
+                Exitoso = false,
+                Mensaje = $"Error al restaurar: {ex.Message}",
+                FechaHoraRestore = DateTime.Now
+            };
+        }
+    }
+
+    private static string FormatearTamano(long bytes)
     {
         string[] sufijos = { "B", "KB", "MB", "GB", "TB" };
         int orden = 0;
         double tamano = bytes;
-
-        while (tamano >= 1024 && orden < sufijos.Length - 1)
-        {
-            orden++;
-            tamano /= 1024;
-        }
-
+        while (tamano >= 1024 && orden < sufijos.Length - 1) { orden++; tamano /= 1024; }
         return $"{tamano:0.##} {sufijos[orden]}";
-    }
-
-    public Task<RestoreResponseDto> RestaurarBackupAsync(RestoreRequestDto request)
-    {
-        return Task.FromResult(new RestoreResponseDto
-        {
-            Exitoso = false,
-            Mensaje = "La restauración manual no está disponible en modo cloud (Supabase). Los restores deben realizarse desde el panel de Supabase.",
-            FechaHoraRestore = DateTime.Now
-        });
     }
 }
