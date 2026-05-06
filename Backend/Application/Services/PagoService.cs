@@ -89,14 +89,36 @@ public class PagoService : IPagoService
 
     public async Task<ComprobantePagoDto> RegistrarPagoAsync(RegistrarPagoDto dto, int idUsuario)
     {
-        var cuota = await _context.Cuotas
-            .Include(c => c.Membresia)
-                .ThenInclude(m => m.Socio)
-                    .ThenInclude(s => s.Persona)
-            .Include(c => c.Membresia.MembresiaActividades)
-                .ThenInclude(ma => ma.Actividad)
-            .Include(c => c.Pagos)
-            .FirstOrDefaultAsync(c => c.Id == dto.IdCuota && c.FechaEliminacion == null);
+        Cuota? cuota;
+
+        if (dto.IdCuota > 0)
+        {
+            cuota = await _context.Cuotas
+                .Include(c => c.Membresia)
+                    .ThenInclude(m => m.Socio)
+                        .ThenInclude(s => s.Persona)
+                .Include(c => c.Membresia.MembresiaActividades)
+                    .ThenInclude(ma => ma.Actividad)
+                .Include(c => c.Pagos)
+                .FirstOrDefaultAsync(c => c.Id == dto.IdCuota && c.FechaEliminacion == null);
+        }
+        else if (dto.IdMembresia > 0)
+        {
+            cuota = await _context.Cuotas
+                .Include(c => c.Membresia)
+                    .ThenInclude(m => m.Socio)
+                        .ThenInclude(s => s.Persona)
+                .Include(c => c.Membresia.MembresiaActividades)
+                    .ThenInclude(ma => ma.Actividad)
+                .Include(c => c.Pagos)
+                .Where(c => c.IdMembresia == dto.IdMembresia && c.Estado != CuotaEstado.Pagada && c.FechaEliminacion == null)
+                .OrderBy(c => c.NumeroCuota)
+                .FirstOrDefaultAsync();
+        }
+        else
+        {
+            throw new InvalidOperationException("Debe especificar IdCuota o IdMembresia");
+        }
 
         if (cuota == null)
             throw new InvalidOperationException("Cuota no encontrada");

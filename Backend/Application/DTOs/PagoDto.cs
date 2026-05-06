@@ -22,9 +22,10 @@ public class PagoDto
 public class RegistrarPagoDto
 {
     public int IdCuota { get; set; }
+    public int IdMembresia { get; set; }
     public int IdMetodoPago { get; set; }
     public decimal Monto { get; set; }
-    public DateTime? FechaPago { get; set; } // Opcional, default: hoy
+    public DateTime? FechaPago { get; set; }
 }
 
 public class ComprobantePagoDto
