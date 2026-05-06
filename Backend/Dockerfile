@@ -4,12 +4,12 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["API/SistemaDeGestionDeClub.API.csproj", "API/"]
-COPY ["Application/SistemaDeGestionDeClub.Application.csproj", "Application/"]
-COPY ["Infrastructure/SistemaDeGestionDeClub.Infrastructure.csproj", "Infrastructure/"]
-COPY ["Domain/SistemaDeGestionDeClub.Domain.csproj", "Domain/"]
+COPY ["Backend/API/SistemaDeGestionDeClub.API.csproj", "API/"]
+COPY ["Backend/Application/SistemaDeGestionDeClub.Application.csproj", "Application/"]
+COPY ["Backend/Infrastructure/SistemaDeGestionDeClub.Infrastructure.csproj", "Infrastructure/"]
+COPY ["Backend/Domain/SistemaDeGestionDeClub.Domain.csproj", "Domain/"]
 RUN dotnet restore "API/SistemaDeGestionDeClub.API.csproj"
-COPY . .
+COPY Backend/ .
 RUN dotnet publish "API/SistemaDeGestionDeClub.API.csproj" -c Release -o /app/publish
 
 FROM base AS final
