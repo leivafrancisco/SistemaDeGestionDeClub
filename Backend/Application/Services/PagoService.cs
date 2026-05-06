@@ -135,7 +135,7 @@ public class PagoService : IPagoService
 
         var pago = new Pago
         {
-            IdCuota = dto.IdCuota,
+            IdCuota = cuota.Id,
             IdMetodoPago = dto.IdMetodoPago,
             IdUsuarioProcesa = idUsuario,
             Monto = dto.Monto,
@@ -147,7 +147,7 @@ public class PagoService : IPagoService
         _context.Pagos.Add(pago);
         await _context.SaveChangesAsync();
 
-        await _cuotaService.MarcarCuotaPagadaAsync(dto.IdCuota);
+        await _cuotaService.MarcarCuotaPagadaAsync(cuota.Id);
         await _membresiaService.ActualizarEstadoDespuesDePagoAsync(cuota.IdMembresia);
 
         return await GenerarComprobanteAsync(pago.Id);
