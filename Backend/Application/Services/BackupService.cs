@@ -55,8 +55,7 @@ public class BackupService : IBackupService
             {
                 Exitoso = true,
                 Mensaje = $"Backup creado exitosamente: {nombreArchivo}",
-                RutaArchivo = rutaCompleta,
-                NombreArchivo = nombreArchivo,
+                RutaCompleta = rutaCompleta,
                 FechaHoraBackup = DateTime.Now
             };
         }
@@ -142,11 +141,11 @@ public class BackupService : IBackupService
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.RutaArchivo))
+            if (string.IsNullOrWhiteSpace(request.RutaBackup))
                 return new RestoreResponseDto { Exitoso = false, Mensaje = "La ruta del archivo es requerida", FechaHoraRestore = DateTime.Now };
 
-            if (!File.Exists(request.RutaArchivo))
-                return new RestoreResponseDto { Exitoso = false, Mensaje = $"El archivo no existe: {request.RutaArchivo}", FechaHoraRestore = DateTime.Now };
+            if (!File.Exists(request.RutaBackup))
+                return new RestoreResponseDto { Exitoso = false, Mensaje = $"El archivo no existe: {request.RutaBackup}", FechaHoraRestore = DateTime.Now };
 
             // Conectar a master para poder restaurar gestion_club
             var connectionString = _configuration.GetConnectionString("DefaultConnection")!
@@ -164,7 +163,7 @@ public class BackupService : IBackupService
             await killCmd.ExecuteNonQueryAsync();
 
             using var restoreCmd = new SqlCommand(
-                $"RESTORE DATABASE [gestion_club] FROM DISK = N'{request.RutaArchivo}' WITH REPLACE, STATS = 10",
+                $"RESTORE DATABASE [gestion_club] FROM DISK = N'{request.RutaBackup}' WITH REPLACE, STATS = 10",
                 connection);
             restoreCmd.CommandTimeout = 600;
             await restoreCmd.ExecuteNonQueryAsync();
