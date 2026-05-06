@@ -223,12 +223,7 @@ public class MembresiaService : IMembresiaService
         var meses = CalcularMeses(membresia.FechaInicio, membresia.FechaFin);
         if (meses == 0) return new List<Cuota>();
 
-        var membresiaConActividades = await _context.Membresias
-            .Include(m => m.MembresiaActividades)
-            .FirstOrDefaultAsync(m => m.Id == membresia.Id);
-
-        var totalCargado = membresiaConActividades?.MembresiaActividades.Sum(ma => ma.PrecioAlMomento) ?? membresia.CostoTotal;
-        var montoPorCuota = Math.Round(totalCargado / meses, 2);
+        var montoPorCuota = Math.Round(membresia.CostoTotal / meses, 2);
 
         var cuotas = new List<Cuota>();
         for (int i = 0; i < meses; i++)
@@ -455,7 +450,7 @@ public class MembresiaService : IMembresiaService
         }
         else
         {
-            var totalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
+            var totalCargado = membresia.CostoTotal;
             var totalPagado = membresia.Cuotas
                 .Where(c => c.FechaEliminacion == null)
                 .SelectMany(c => c.Pagos)
@@ -473,7 +468,7 @@ public class MembresiaService : IMembresiaService
 
     private static MembresiaDto MapearADto(Membresia membresia)
     {
-        var totalCargado = membresia.MembresiaActividades.Sum(ma => ma.PrecioAlMomento);
+        var totalCargado = membresia.CostoTotal;
         var totalPagado = membresia.Cuotas
             .Where(c => c.FechaEliminacion == null)
             .SelectMany(c => c.Pagos)
