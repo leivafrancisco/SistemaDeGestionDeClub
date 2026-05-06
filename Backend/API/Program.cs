@@ -6,16 +6,13 @@ using Microsoft.OpenApi.Models;
 using SistemaDeGestionDeClub.Application.Services;
 using SistemaDeGestionDeClub.Infrastructure.Data;
 
-// Fix para Npgsql 6+: permite escribir DateTime con Kind=Local/Utc en columnas timestamp without time zone
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuración de servicios
 
 // Database Context
 builder.Services.AddDbContext<ClubDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Services
 builder.Services.AddScoped<ISocioService, SocioService>();
@@ -110,15 +107,12 @@ var app = builder.Build();
 
 // Configuración del pipeline HTTP
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema de Gestión de Club API v1");
-        c.RoutePrefix = string.Empty; // Swagger en la raíz
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema de Gestión de Club API v1");
+    c.RoutePrefix = string.Empty;
+});
 
 if (!app.Environment.IsDevelopment())
 {

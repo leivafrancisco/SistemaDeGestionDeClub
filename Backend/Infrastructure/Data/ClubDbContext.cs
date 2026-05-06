@@ -43,8 +43,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
             entity.Property(e => e.Dni).HasColumnName("dni").HasMaxLength(20);
             entity.Property(e => e.FechaNacimiento).HasColumnName("fecha_nacimiento");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
             
             entity.HasIndex(e => e.Email).IsUnique();
@@ -73,8 +73,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.NombreUsuario).HasColumnName("nombre_usuario").HasMaxLength(50).IsRequired();
             entity.Property(e => e.ContrasenaHash).HasColumnName("contrasena_hash").HasMaxLength(255).IsRequired();
             entity.Property(e => e.EstaActivo).HasColumnName("esta_activo").HasDefaultValue(true);
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
             
             entity.HasIndex(e => e.NombreUsuario).IsUnique();
@@ -100,10 +100,10 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.IdPersona).HasColumnName("id_persona");
             entity.Property(e => e.NumeroSocio).HasColumnName("numero_socio").HasMaxLength(20).IsRequired();
             entity.Property(e => e.EstaActivo).HasColumnName("esta_activo").HasDefaultValue(true);
-            entity.Property(e => e.FechaAlta).HasColumnName("fecha_alta").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaAlta).HasColumnName("fecha_alta").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaBaja).HasColumnName("fecha_baja");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
             
             entity.HasIndex(e => e.NumeroSocio).IsUnique();
@@ -125,8 +125,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(500);
             entity.Property(e => e.Precio).HasColumnName("precio_actual").HasColumnType("decimal(10, 2)").IsRequired();
             entity.Property(e => e.EsCuotaBase).HasColumnName("es_cuota_base").HasDefaultValue(false);
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
 
             entity.HasIndex(e => e.Nombre).IsUnique();
@@ -143,8 +143,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.FechaFin).HasColumnName("fecha_fin");
             entity.Property(e => e.CostoTotal).HasColumnName("costo_total").HasColumnType("decimal(12, 2)").IsRequired();
             entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(45).HasDefaultValue("activa");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
 
             entity.HasOne(e => e.Socio)
@@ -200,8 +200,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.IdUsuarioProcesa).HasColumnName("id_usuario_procesa");
             entity.Property(e => e.Monto).HasColumnName("monto").HasColumnType("decimal(10, 2)").IsRequired();
             entity.Property(e => e.FechaPago).HasColumnName("fecha_pago");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
 
             entity.HasOne(e => e.Cuota)
@@ -231,8 +231,8 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Monto).HasColumnName("monto").HasColumnType("decimal(10, 2)").IsRequired();
             entity.Property(e => e.FechaVencimiento).HasColumnName("fecha_vencimiento").IsRequired();
             entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue(CuotaEstado.Pendiente);
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
 
             entity.Ignore(e => e.EstaPagada);
@@ -254,9 +254,9 @@ public class ClubDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IdSocio).HasColumnName("id_socio");
-            entity.Property(e => e.FechaHoraIngreso).HasColumnName("fecha_hora_ingreso").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaHoraIngreso).HasColumnName("fecha_hora_ingreso").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.FechaEliminacion).HasColumnName("fecha_eliminacion");
 
             entity.HasIndex(e => new { e.IdSocio, e.FechaHoraIngreso });
@@ -277,7 +277,7 @@ public class ClubDbContext : DbContext
             entity.Property(e => e.Operacion).HasColumnName("operacion").HasMaxLength(20).IsRequired();
             entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
             entity.Property(e => e.NombreUsuario).HasColumnName("nombre_usuario").HasMaxLength(100);
-            entity.Property(e => e.FechaHora).HasColumnName("fecha_hora").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.FechaHora).HasColumnName("fecha_hora").HasDefaultValueSql("GETDATE()");
             entity.Property(e => e.ValoresAnteriores).HasColumnName("valores_anteriores");
             entity.Property(e => e.ValoresNuevos).HasColumnName("valores_nuevos");
             entity.Property(e => e.NombreEntidad).HasColumnName("nombre_entidad").HasMaxLength(100);
