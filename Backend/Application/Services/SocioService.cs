@@ -1,3 +1,5 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SistemaDeGestionDeClub.Application.DTOs;
 using SistemaDeGestionDeClub.Domain.Entities;
@@ -14,6 +16,12 @@ public interface ISocioService
     Task<SocioDto> ActualizarSocioAsync(int id, ActualizarSocioDto dto);
     Task<bool> DesactivarSocioAsync(int id);
     Task<int> ContarTotalSociosAsync();
+
+    // Invoca sp_ResumenSocio (consulta)
+    Task<ResumenSocioDto?> ObtenerResumenAsync(int idSocio);
+
+    // Invoca sp_CambiarEstadoSocio (actualización)
+    Task<SocioDto?> CambiarEstadoAsync(int idSocio, bool estaActivo, int? idUsuarioProcesa);
 }
 
 public class SocioService : ISocioService
@@ -270,5 +278,89 @@ public class SocioService : ISocioService
         return await _context.Socios
             .Where(s => s.FechaEliminacion == null && s.EstaActivo)
             .CountAsync();
+    }
+
+    /// <summary>
+    /// Llama a sp_ResumenSocio y devuelve el resumen financiero del socio.
+    /// </summary>
+    public async Task<ResumenSocioDto?> ObtenerResumenAsync(int idSocio)
+    {
+        var connection = _context.Database.GetDbConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText  = "sp_ResumenSocio";
+        command.CommandType  = CommandType.StoredProcedure;
+        command.Parameters.Add(new SqlParameter("@id_socio", idSocio));
+
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync();
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return null;
+
+        return new ResumenSocioDto
+        {
+            IdSocio              = reader.GetInt32(reader.GetOrdinal("id_socio")),
+            NombreCompleto       = reader.GetString(reader.GetOrdinal("nombre_completo")),
+            NumeroSocio          = reader.GetString(reader.GetOrdinal("numero_socio")),
+            Email                = reader.GetString(reader.GetOrdinal("email")),
+            Dni                  = reader.IsDBNull(reader.GetOrdinal("dni"))
+                                       ? null
+                                       : reader.GetString(reader.GetOrdinal("dni")),
+            EstaActivo           = reader.GetBoolean(reader.GetOrdinal("esta_activo")),
+            FechaAlta            = reader.GetDateTime(reader.GetOrdinal("fecha_alta")),
+            FechaBaja            = reader.IsDBNull(reader.GetOrdinal("fecha_baja"))
+                                       ? null
+                                       : reader.GetDateTime(reader.GetOrdinal("fecha_baja")),
+            TotalMembresias      = reader.GetInt32(reader.GetOrdinal("total_membresias")),
+            TotalCargado         = reader.GetDecimal(reader.GetOrdinal("total_cargado")),
+            TotalPagado          = reader.GetDecimal(reader.GetOrdinal("total_pagado")),
+            SaldoPendiente       = reader.GetDecimal(reader.GetOrdinal("saldo_pendiente")),
+            UltimaFechaPago      = reader.IsDBNull(reader.GetOrdinal("ultima_fecha_pago"))
+                                       ? null
+                                       : reader.GetDateTime(reader.GetOrdinal("ultima_fecha_pago")),
+            AsistenciasEsteMes   = reader.GetInt32(reader.GetOrdinal("asistencias_este_mes")),
+        };
+    }
+
+    /// <summary>
+    /// Llama a sp_CambiarEstadoSocio y devuelve el socio actualizado.
+    /// </summary>
+    public async Task<SocioDto?> CambiarEstadoAsync(int idSocio, bool estaActivo, int? idUsuarioProcesa)
+    {
+        var connection = _context.Database.GetDbConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "sp_CambiarEstadoSocio";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.Add(new SqlParameter("@id_socio",           idSocio));
+        command.Parameters.Add(new SqlParameter("@esta_activo",        estaActivo ? 1 : 0));
+        command.Parameters.Add(new SqlParameter("@id_usuario_procesa",
+            idUsuarioProcesa.HasValue ? (object)idUsuarioProcesa.Value : DBNull.Value));
+
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync();
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return null;
+
+        return new SocioDto
+        {
+            Id           = reader.GetInt32(reader.GetOrdinal("id")),
+            NumeroSocio  = reader.GetString(reader.GetOrdinal("numero_socio")),
+            Nombre       = reader.GetString(reader.GetOrdinal("nombre")),
+            Apellido     = reader.GetString(reader.GetOrdinal("apellido")),
+            Email        = reader.GetString(reader.GetOrdinal("email")),
+            Dni          = reader.IsDBNull(reader.GetOrdinal("dni"))
+                               ? null
+                               : reader.GetString(reader.GetOrdinal("dni")),
+            EstaActivo   = reader.GetBoolean(reader.GetOrdinal("esta_activo")),
+            FechaAlta    = reader.GetDateTime(reader.GetOrdinal("fecha_alta")),
+            FechaBaja    = reader.IsDBNull(reader.GetOrdinal("fecha_baja"))
+                               ? null
+                               : reader.GetDateTime(reader.GetOrdinal("fecha_baja")),
+        };
     }
 }

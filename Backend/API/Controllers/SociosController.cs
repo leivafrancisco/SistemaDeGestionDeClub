@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaDeGestionDeClub.Application.DTOs;
@@ -153,6 +154,53 @@ public class SociosController : ControllerBase
         }
     }
     
+    /// <summary>
+    /// Resumen financiero del socio — invoca sp_ResumenSocio
+    /// </summary>
+    [HttpGet("{id}/resumen")]
+    public async Task<ActionResult<ResumenSocioDto>> ObtenerResumen(int id)
+    {
+        try
+        {
+            var resumen = await _socioService.ObtenerResumenAsync(id);
+
+            if (resumen == null)
+                return NotFound(new { message = "Socio no encontrado" });
+
+            return Ok(resumen);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al obtener resumen del socio", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Cambiar estado (activo/inactivo) de un socio — invoca sp_CambiarEstadoSocio
+    /// </summary>
+    [HttpPut("{id}/estado")]
+    [Authorize(Roles = "superadmin,admin")]
+    public async Task<ActionResult<SocioDto>> CambiarEstado(int id, [FromBody] CambiarEstadoSocioDto dto)
+    {
+        try
+        {
+            // Obtener el ID del usuario autenticado desde el JWT
+            var claimId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? idUsuarioProcesa = claimId != null && int.TryParse(claimId, out var uid) ? uid : null;
+
+            var socio = await _socioService.CambiarEstadoAsync(id, dto.EstaActivo, idUsuarioProcesa);
+
+            if (socio == null)
+                return NotFound(new { message = "Socio no encontrado" });
+
+            return Ok(socio);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al cambiar estado del socio", error = ex.Message });
+        }
+    }
+
     /// <summary>
     /// Obtener cantidad total de socios activos
     /// </summary>

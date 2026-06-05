@@ -1,0 +1,280 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ===== SECCION: DOMAIN ENTITIES ===== -->
+
+    <!-- Label sección -->
+    <mxCell id="100" value="&lt;b&gt;DOMAIN LAYER — Entidades&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="10" y="-40" width="660" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Persona -->
+    <mxCell id="2" value="Persona" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="10" y="10" width="210" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="+ Id : int&#xa;+ Nombre : string&#xa;+ Apellido : string&#xa;+ Email : string&#xa;+ Dni : string?&#xa;+ FechaNacimiento : DateTime?&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?&#xa;─────────────────────&#xa;+ NombreCompleto : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;" vertex="1" parent="2">
+      <mxGeometry x="0" y="30" width="210" height="200" as="geometry" />
+    </mxCell>
+
+    <!-- Rol -->
+    <mxCell id="4" value="Rol" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="230" y="10" width="190" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="+ Id : int&#xa;+ Nombre : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="4">
+      <mxGeometry x="0" y="30" width="190" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Auditoria -->
+    <mxCell id="6" value="Auditoria" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="430" y="10" width="230" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="+ Id : int&#xa;+ Tabla : string&#xa;+ Operacion : string&#xa;+ IdUsuario : int?&#xa;+ NombreUsuario : string?&#xa;+ FechaHora : DateTime&#xa;+ ValoresAnteriores : string?&#xa;+ ValoresNuevos : string?&#xa;+ NombreEntidad : string?&#xa;+ IdEntidad : string?&#xa;+ Detalles : string?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="6">
+      <mxGeometry x="0" y="30" width="230" height="230" as="geometry" />
+    </mxCell>
+
+    <!-- Usuario -->
+    <mxCell id="8" value="Usuario" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="10" y="260" width="210" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="+ Id : int&#xa;+ IdPersona : int&#xa;+ IdRol : int&#xa;+ NombreUsuario : string&#xa;+ ContrasenaHash : string&#xa;+ EstaActivo : bool&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="8">
+      <mxGeometry x="0" y="30" width="210" height="190" as="geometry" />
+    </mxCell>
+
+    <!-- Socio -->
+    <mxCell id="10" value="Socio" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="230" y="260" width="210" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="+ Id : int&#xa;+ IdPersona : int&#xa;+ NumeroSocio : string&#xa;+ EstaActivo : bool&#xa;+ FechaAlta : DateTime&#xa;+ FechaBaja : DateTime?&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="10">
+      <mxGeometry x="0" y="30" width="210" height="190" as="geometry" />
+    </mxCell>
+
+    <!-- Actividad -->
+    <mxCell id="12" value="Actividad" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="450" y="260" width="210" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="+ Id : int&#xa;+ Nombre : string&#xa;+ Descripcion : string?&#xa;+ Precio : decimal&#xa;+ EsCuotaBase : bool&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="12">
+      <mxGeometry x="0" y="30" width="210" height="170" as="geometry" />
+    </mxCell>
+
+    <!-- Membresia -->
+    <mxCell id="14" value="Membresia" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="10" y="510" width="210" height="290" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="+ Id : int&#xa;+ IdSocio : int&#xa;+ FechaInicio : DateTime&#xa;+ FechaFin : DateTime&#xa;+ CostoTotal : decimal&#xa;+ Estado : string&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?&#xa;─────────────────────&#xa;+ TotalCargado : decimal&#xa;+ TotalPagado : decimal&#xa;+ Saldo : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="14">
+      <mxGeometry x="0" y="30" width="210" height="260" as="geometry" />
+    </mxCell>
+
+    <!-- MembresiaActividad -->
+    <mxCell id="16" value="MembresiaActividad" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="230" y="510" width="210" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="+ IdMembresia : int&#xa;+ IdActividad : int&#xa;+ PrecioAlMomento : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="16">
+      <mxGeometry x="0" y="30" width="210" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- MetodoPago -->
+    <mxCell id="18" value="MetodoPago" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="450" y="510" width="190" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="+ Id : int&#xa;+ Nombre : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="18">
+      <mxGeometry x="0" y="30" width="190" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Cuota -->
+    <mxCell id="20" value="Cuota" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="10" y="830" width="210" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="+ Id : int&#xa;+ IdMembresia : int&#xa;+ NumeroCuota : int&#xa;+ Monto : decimal&#xa;+ FechaVencimiento : DateTime&#xa;+ Estado : string&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?&#xa;─────────────────────&#xa;+ EstaPagada : bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="20">
+      <mxGeometry x="0" y="30" width="210" height="220" as="geometry" />
+    </mxCell>
+
+    <!-- Pago -->
+    <mxCell id="22" value="Pago" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="230" y="830" width="210" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="+ Id : int&#xa;+ IdCuota : int&#xa;+ IdMetodoPago : int&#xa;+ IdUsuarioProcesa : int?&#xa;+ Monto : decimal&#xa;+ FechaPago : DateTime&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="22">
+      <mxGeometry x="0" y="30" width="210" height="190" as="geometry" />
+    </mxCell>
+
+    <!-- Asistencia -->
+    <mxCell id="24" value="Asistencia" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="450" y="830" width="210" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="+ Id : int&#xa;+ IdSocio : int&#xa;+ FechaHoraIngreso : DateTime&#xa;+ FechaCreacion : DateTime&#xa;+ FechaActualizacion : DateTime&#xa;+ FechaEliminacion : DateTime?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="24">
+      <mxGeometry x="0" y="30" width="210" height="140" as="geometry" />
+    </mxCell>
+
+    <!-- ===== SECCION: APPLICATION SERVICES ===== -->
+
+    <mxCell id="101" value="&lt;b&gt;APPLICATION LAYER — Servicios&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#fffacd;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="700" y="-40" width="570" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- AuthService -->
+    <mxCell id="26" value="&lt;&lt;interface&gt;&gt; AuthService" style="swimlane;fontStyle=3;align=center;startSize=40;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="10" width="280" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="+ LoginAsync(LoginDto) : Task&lt;LoginResponseDto?&gt;&#xa;+ ObtenerUsuarioActualAsync(int) : Task&lt;UsuarioDto?&gt;&#xa;+ ActualizarPerfilAsync(int, dto) : Task&lt;UsuarioDto?&gt;&#xa;─────────────────────&#xa;- GenerarTokenJwt(Usuario) : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="26">
+      <mxGeometry x="0" y="40" width="280" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- SocioService -->
+    <mxCell id="28" value="SocioService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="180" width="280" height="190" as="geometry" />
+    </mxCell>
+    <mxCell id="29" value="+ ObtenerTodosSociosAsync(...) : Task&lt;List&lt;SocioDto&gt;&gt;&#xa;+ ObtenerSocioPorIdAsync(int) : Task&lt;SocioDto?&gt;&#xa;+ ObtenerSocioPorNumeroAsync(string) : Task&lt;SocioDto?&gt;&#xa;+ CrearSocioAsync(dto) : Task&lt;SocioDto&gt;&#xa;+ ActualizarSocioAsync(int, dto) : Task&lt;SocioDto&gt;&#xa;+ DesactivarSocioAsync(int) : Task&lt;bool&gt;&#xa;+ ContarTotalSociosAsync() : Task&lt;int&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="28">
+      <mxGeometry x="0" y="30" width="280" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- MembresiaService -->
+    <mxCell id="30" value="MembresiaService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="390" width="280" height="290" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="+ ObtenerTodasMembresiasAsync(filtros)&#xa;+ ObtenerMembresiaPorIdAsync(int)&#xa;+ CrearMembresiaAsync(dto) : Task&lt;MembresiaDto&gt;&#xa;+ ActualizarMembresiaAsync(int, dto)&#xa;+ EliminarMembresiaAsync(int) : Task&lt;bool&gt;&#xa;+ ContarTotalMembresiasAsync() : Task&lt;int&gt;&#xa;+ AsignarActividadAsync(dto)&#xa;+ RemoverActividadAsync(dto)&#xa;+ ActualizarEstadoDespuesDePagoAsync(int)&#xa;─────────────────────&#xa;- GenerarCuotasAsync(Membresia)&#xa;- CalcularMeses(DateTime, DateTime) : int&#xa;- MapearADto(Membresia) : MembresiaDto" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="30">
+      <mxGeometry x="0" y="30" width="280" height="260" as="geometry" />
+    </mxCell>
+
+    <!-- CuotaService -->
+    <mxCell id="32" value="CuotaService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="700" width="280" height="240" as="geometry" />
+    </mxCell>
+    <mxCell id="33" value="+ ObtenerCuotasAsync(filtros)&#xa;+ ObtenerCuotaPorIdAsync(int)&#xa;+ ObtenerCuotasPorMembresiaAsync(int)&#xa;+ ObtenerCuotasPorSocioAsync(int)&#xa;+ ObtenerMorososAsync() : Task&lt;List&lt;MorosoDto&gt;&gt;&#xa;+ ObtenerResumenAsync() : Task&lt;ResumenCuotasDto&gt;&#xa;+ GenerarCuotasParaMembresiaAsync(int)&#xa;+ ActualizarEstadosVencidosAsync() : Task&lt;int&gt;&#xa;+ MarcarCuotaPagadaAsync(int) : Task&#xa;+ RevertirCuotaPagadaAsync(int) : Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="32">
+      <mxGeometry x="0" y="30" width="280" height="210" as="geometry" />
+    </mxCell>
+
+    <!-- PagoService -->
+    <mxCell id="34" value="PagoService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="10" width="280" height="240" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="+ ObtenerTodosPagosAsync(filtros)&#xa;+ ObtenerPagoPorIdAsync(int)&#xa;+ RegistrarPagoAsync(dto, int) : Task&lt;ComprobantePagoDto&gt;&#xa;+ GenerarComprobanteAsync(int)&#xa;+ AnularPagoAsync(int) : Task&lt;bool&gt;&#xa;+ ObtenerTotalRecaudadoAsync(...)&#xa;+ ObtenerMetodosPagoAsync()&#xa;+ ObtenerEstadisticasPagosAsync(...)&#xa;─────────────────────&#xa;- MapearADto(Pago) : PagoDto" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="34">
+      <mxGeometry x="0" y="30" width="280" height="210" as="geometry" />
+    </mxCell>
+
+    <!-- ActividadService -->
+    <mxCell id="36" value="ActividadService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="270" width="280" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="37" value="+ ObtenerTodasActividadesAsync()&#xa;+ ObtenerActividadPorIdAsync(int)&#xa;+ CrearActividadAsync(dto) : Task&lt;ActividadDto&gt;&#xa;+ ActualizarActividadAsync(int, dto)&#xa;+ EliminarActividadAsync(int) : Task&lt;bool&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="36">
+      <mxGeometry x="0" y="30" width="280" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- AsistenciaService -->
+    <mxCell id="38" value="AsistenciaService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="440" width="280" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="39" value="+ VerificarEstadoSocioAsync(string)&#xa;+ RegistrarAsistenciaAsync(string)&#xa;+ ObtenerAsistenciasAsync(fecha, idSocio)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="38">
+      <mxGeometry x="0" y="30" width="280" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- BackupService -->
+    <mxCell id="40" value="BackupService" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="570" width="280" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="+ CrearBackupAsync(dto) : Task&lt;BackupResponseDto&gt;&#xa;+ ObtenerBasesDatosDisponiblesAsync()&#xa;+ ObtenerArchivoBackupAsync(string)&#xa;+ ObtenerBackupsDisponiblesAsync()&#xa;+ RestaurarBackupAsync(dto)&#xa;─────────────────────&#xa;- FormatearTamano(long) : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;" vertex="1" parent="40">
+      <mxGeometry x="0" y="30" width="280" height="150" as="geometry" />
+    </mxCell>
+
+    <!-- ===== RELACIONES ENTRE ENTIDADES ===== -->
+
+    <!-- Persona 1 ── 0..1 Usuario -->
+    <mxCell id="50" value="1          0..1" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="2" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Persona 1 ── 0..1 Socio -->
+    <mxCell id="51" value="1          0..1" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="2" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Rol 1 ── * Usuario -->
+    <mxCell id="52" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="4" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Socio 1 ── * Membresia -->
+    <mxCell id="53" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="14" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Socio 1 ── * Asistencia -->
+    <mxCell id="54" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="24" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Membresia 1 ── * MembresiaActividad -->
+    <mxCell id="55" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=ERmany;startArrow=ERone;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="14" target="16" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Actividad 1 ── * MembresiaActividad -->
+    <mxCell id="56" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="12" target="16" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Membresia 1 ── * Cuota (composicion) -->
+    <mxCell id="57" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;startArrow=ERmandOne;" edge="1" source="14" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Cuota 1 ── * Pago -->
+    <mxCell id="58" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="20" target="22" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- MetodoPago 1 ── * Pago -->
+    <mxCell id="59" value="1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="18" target="22" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Usuario 1 ── * Pago (procesa) -->
+    <mxCell id="60" value="procesa&#xa;1          *" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="8" target="22" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== PATRON FACHADA — RECUADRO ===== -->
+
+    <!-- Recuadro que agrupa MembresiaService y PagoService -->
+    <mxCell id="200" value="" style="rounded=1;whiteSpace=wrap;fillColor=none;strokeColor=#FF0000;strokeWidth=3;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+      <mxGeometry x="690" y="375" width="600" height="260" as="geometry" />
+    </mxCell>
+
+    <!-- Etiqueta del patrón -->
+    <mxCell id="201" value="&lt;b&gt;«Patrón Fachada»&lt;/b&gt;" style="text;html=1;strokeColor=#FF0000;fillColor=#FF0000;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontColor=#ffffff;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="690" y="350" width="180" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Nota de justificación -->
+    <mxCell id="202" value="&lt;b&gt;Justificación:&lt;/b&gt;&lt;br&gt;El cliente realiza UNA sola llamada&lt;br&gt;(CrearMembresiaAsync) y el sistema&lt;br&gt;ejecuta internamente:&lt;br&gt;1. Valida socio y fechas&lt;br&gt;2. Crea la membresía&lt;br&gt;3. Asigna actividades&lt;br&gt;4. Genera 12 cuotas automáticamente&lt;br&gt;5. Registra el pago inicial&lt;br&gt;6. Actualiza el estado&lt;br&gt;&lt;br&gt;El cliente NO conoce la complejidad interna." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fontSize=11;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="1300" y="375" width="260" height="230" as="geometry" />
+    </mxCell>
+
+    <!-- Flecha de la nota al recuadro -->
+    <mxCell id="203" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d6b656;dashed=1;" edge="1" source="202" target="200" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== PATRONES DE DISEÑO ===== -->
+
+    <mxCell id="102" value="&lt;b&gt;PATRONES DE DISEÑO DETECTADOS&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#f8cecc;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="700" y="960" width="580" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Creacionales -->
+    <mxCell id="103" value="&lt;b&gt;CREACIONALES&lt;/b&gt;&#xa;&#xa;• Singleton → ClubDbContext (Scoped DI)&#xa;• Método Fábrica → AuthService.GenerarTokenJwt()" style="rounded=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;" vertex="1" parent="1">
+      <mxGeometry x="700" y="1000" width="280" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- Estructurales -->
+    <mxCell id="104" value="&lt;b&gt;ESTRUCTURALES&lt;/b&gt;&#xa;&#xa;• Fachada → MembresiaService, PagoService&#xa;• Adaptador → ClubDbContext (EF Core)&#xa;• Repositorio → DbSet&lt;T&gt; en ClubDbContext" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;" vertex="1" parent="1">
+      <mxGeometry x="990" y="1000" width="290" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- De Comportamiento -->
+    <mxCell id="105" value="&lt;b&gt;DE COMPORTAMIENTO&lt;/b&gt;&#xa;&#xa;• Estrategia → SqlServerRetryingExecutionStrategy&#xa;• Cadena de Responsabilidad → Middleware ASP.NET&#xa;• Estado → Cuota.Estado / Membresia.Estado&#xa;• Observador → IAuditoriaService&#xa;• Método Plantilla → Interfaces de servicios" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;" vertex="1" parent="1">
+      <mxGeometry x="700" y="1110" width="580" height="110" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
