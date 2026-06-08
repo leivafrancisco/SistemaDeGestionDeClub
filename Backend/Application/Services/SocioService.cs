@@ -258,19 +258,13 @@ public class SocioService : ISocioService
     
     public async Task<bool> DesactivarSocioAsync(int id)
     {
-        var socio = await _context.Socios.FindAsync(id);
-        
-        if (socio == null || socio.FechaEliminacion != null)
+        var existe = await _context.Socios.AnyAsync(s => s.Id == id && s.FechaEliminacion == null);
+        if (!existe)
         {
             return false;
         }
-        
-        socio.EstaActivo = false;
-        socio.FechaBaja = DateTime.Now;
-        
-        await _context.SaveChangesAsync();
-        
-        return true;
+        var socio = await CambiarEstadoAsync(id, false, null);
+        return socio != null;
     }
     
     public async Task<int> ContarTotalSociosAsync()

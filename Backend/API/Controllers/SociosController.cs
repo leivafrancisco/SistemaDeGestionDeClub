@@ -139,9 +139,20 @@ public class SociosController : ControllerBase
     {
         try
         {
-            var resultado = await _socioService.DesactivarSocioAsync(id);
+            // Obtener el ID del usuario autenticado desde el JWT
+            var claimId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int? idUsuarioProcesa = claimId != null && int.TryParse(claimId, out var uid) ? uid : null;
+
+            // Verificar si el socio existe
+            var existe = await _socioService.ObtenerSocioPorIdAsync(id) != null;
+            if (!existe)
+            {
+                return NotFound(new { message = "Socio no encontrado" });
+            }
+
+            var socio = await _socioService.CambiarEstadoAsync(id, false, idUsuarioProcesa);
             
-            if (!resultado)
+            if (socio == null)
             {
                 return NotFound(new { message = "Socio no encontrado" });
             }
