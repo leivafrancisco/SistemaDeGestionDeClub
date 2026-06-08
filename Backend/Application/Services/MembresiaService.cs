@@ -187,32 +187,50 @@ public class MembresiaService : IMembresiaService
             Console.WriteLine($"[DEBUG] {actividades.Count} actividades guardadas");
         }
 
-        // Generar cuotas ANTES del pago inicial (el pago se vincula a la cuota #1)
+        // Generar cuotas ANTES del pago inicial (el pago se vincula a la cuota #1 o se distribuye)
         var cuotas = await GenerarCuotasAsync(membresia);
 
-        // Crear el pago inicial vinculado a la primera cuota
-        if (cuotas.Any())
+        // Crear el pago inicial distribuido entre las cuotas generadas
+        if (cuotas.Any() && dto.Monto > 0)
         {
-            var primeraCuota = cuotas.OrderBy(c => c.NumeroCuota).First();
+            var montoRestante = dto.Monto;
+            var cuotasOrdenadas = cuotas.OrderBy(c => c.NumeroCuota).ToList();
 
-            var pago = new Pago
+            foreach (var cuota in cuotasOrdenadas)
             {
-                IdCuota = primeraCuota.Id,
-                IdMetodoPago = dto.IdMetodoPago,
-                IdUsuarioProcesa = dto.IdUsuarioProcesa,
-                Monto = dto.Monto,
-                FechaPago = DateTime.Now,
-                FechaCreacion = DateTime.Now,
-                FechaActualizacion = DateTime.Now
-            };
+                if (montoRestante <= 0)
+                    break;
 
-            _context.Pagos.Add(pago);
+                var montoAbonado = Math.Min(montoRestante, cuota.Monto);
+
+                var pago = new Pago
+                {
+                    IdCuota = cuota.Id,
+                    IdMetodoPago = dto.IdMetodoPago,
+                    IdUsuarioProcesa = dto.IdUsuarioProcesa,
+                    Monto = montoAbonado,
+                    FechaPago = DateTime.Now,
+                    FechaCreacion = DateTime.Now,
+                    FechaActualizacion = DateTime.Now
+                };
+
+                _context.Pagos.Add(pago);
+
+                // Si se cubre el monto de la cuota, se marca como pagada
+                if (montoAbonado >= cuota.Monto - 0.01m)
+                {
+                    cuota.Estado = CuotaEstado.Pagada;
+                }
+
+                montoRestante -= montoAbonado;
+            }
+
             await _context.SaveChangesAsync();
 
-            primeraCuota.Estado = CuotaEstado.Pagada;
-            await _context.SaveChangesAsync();
+            // Reevaluar y actualizar el estado general de la membresía (Activa / PagoPendiente) según los pagos aplicados
+            await ActualizarEstadoDespuesDePagoAsync(membresia.Id);
 
-            Console.WriteLine($"[DEBUG] Pago inicial ID: {pago.Id} vinculado a cuota #1 (ID: {primeraCuota.Id})");
+            Console.WriteLine($"[DEBUG] Pago inicial de {dto.Monto} distribuido. Membresía ID: {membresia.Id} actualizada.");
         }
 
         return (await ObtenerMembresiaPorIdAsync(membresia.Id))!;
