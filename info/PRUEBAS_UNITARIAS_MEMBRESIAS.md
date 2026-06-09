@@ -12,10 +12,10 @@
 private static int CalcularMeses(DateTime inicio, DateTime fin)
 {
     return (fin.Year - inicio.Year) * 12 + fin.Month - inicio.Month +
-           (fin.Day >= inicio.Day ? 1 : 0);
+           (fin.Day > inicio.Day ? 1 : 0);
 }
 ```
-Calcula cuántos meses hay entre dos fechas. Si el día de fin es mayor o igual al día de inicio, suma 1 mes adicional.
+Calcula cuántos meses hay entre dos fechas. Si el día de fin es estrictamente mayor al día de inicio, suma 1 mes adicional.
 
 ---
 
@@ -35,8 +35,8 @@ Genera una cuota por cada mes que dure la membresía. Divide el costo total en p
 | 2 | 01/01/2025 | 31/01/2025 | Membresía de 1 solo mes | 1 |
 | 3 | 01/11/2024 | 28/02/2025 | Membresía que cruza cambio de año | 4 |
 | 4 | 15/01/2025 | 10/03/2025 | Día de fin menor al día de inicio | 2 |
-| 5 | 01/01/2025 | 01/04/2025 | Día de fin igual al día de inicio | 4 |
-| 6 | 01/01/2025 | 01/01/2025 | Misma fecha inicio y fin | 1 |
+| 5 | 01/01/2025 | 01/04/2025 | Día de fin igual al día de inicio | 3 |
+| 6 | 01/01/2025 | 01/01/2025 | Misma fecha inicio y fin | 0 |
 
 ### Justificación
 
@@ -64,15 +64,15 @@ Cuando el día de fin es menor NO se suma el +1.
 
 **Caso 5 — Día de fin IGUAL al día de inicio**
 ```
-(2025-2025)*12 + (4-1) + (1 >= 1 → 1) = 0 + 3 + 1 = 4
+(2025-2025)*12 + (4-1) + (1 > 1 → 0) = 0 + 3 + 0 = 3
 ```
-Cuando el día coincide SÍ se suma el +1.
+Cuando el día coincide NO se suma el +1 (es un periodo exacto de 3 meses).
 
 **Caso 6 — Misma fecha inicio y fin**
 ```
-(2025-2025)*12 + (1-1) + (1 >= 1 → 1) = 0 + 0 + 1 = 1
+(2025-2025)*12 + (1-1) + (1 > 1 → 0) = 0 + 0 + 0 = 0
 ```
-Caso borde: mismo día cuenta como 1 mes.
+Caso borde matemático de rango vacío (bloqueado en la API mediante validación de fechas).
 
 ---
 

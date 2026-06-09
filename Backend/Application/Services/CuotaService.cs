@@ -264,7 +264,7 @@ public class CuotaService : ICuotaService
     private static int CalcularMeses(DateTime inicio, DateTime fin)
     {
         return (fin.Year - inicio.Year) * 12 + fin.Month - inicio.Month +
-               (fin.Day >= inicio.Day ? 1 : 0);
+               (fin.Day > inicio.Day ? 1 : 0);
     }
 
     private static CuotaDto MapearADto(Cuota cuota)
